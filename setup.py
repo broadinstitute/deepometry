@@ -11,7 +11,9 @@ setuptools.setup(
     },
     install_requires=[
         "imbalanced-learn",
-        "keras"
+        "javabridge",
+        "keras",
+        "python-bioformats"
     ],
     license="BSD",
     name="deepometry",

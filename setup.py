@@ -10,6 +10,7 @@ setuptools.setup(
         ]
     },
     install_requires=[
+        "imbalanced-learn",
         "keras"
     ],
     license="BSD",

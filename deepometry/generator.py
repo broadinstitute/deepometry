@@ -1,6 +1,7 @@
 import numpy
 import threading
 
+import keras.utils
 import imblearn.over_sampling
 
 
@@ -60,7 +61,10 @@ class NumpyArrayIterator(Iterator):
         self.generator = generator
 
         self.x = x
+
         self.y = y
+
+        self.num_classes = len(numpy.unique(y))
 
         Iterator.__init__(self, len(y), batch_size, shuffle, seed)
 
@@ -68,7 +72,7 @@ class NumpyArrayIterator(Iterator):
         with self.lock:
             index_array, current_index, current_batch_size = next(self.index_generator)
 
-        return self.x[index_array], self.y[index_array]
+        return self.x[index_array], keras.utils.to_categorical(self.y[index_array], self.num_classes)
 
 
 class NumpyArrayGenerator:

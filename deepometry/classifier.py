@@ -3,6 +3,7 @@ import os.path
 import keras.callbacks
 import keras.losses
 import keras.optimizers
+import keras.utils
 import keras.wrappers.scikit_learn
 import numpy
 import sklearn.utils
@@ -66,7 +67,7 @@ class Classifier(keras.wrappers.scikit_learn.KerasClassifier):
         Fit classifier.
 
         :param x: NumPy array of training data (N_samples, rows, columns channels).
-        :param y: NumPy array of one-hot encoded target values (N_samples, N_classes).
+        :param y: NumPy array target values (N_samples,).
         :param kwargs: (Optional) Arguments passed to keras.models.Sequential fit.
         """
         if "class_weight" not in kwargs:
@@ -76,4 +77,6 @@ class Classifier(keras.wrappers.scikit_learn.KerasClassifier):
                 numpy.nonzero(y)[1]
             )
 
-        super(Classifier, self).fit(x, y, **kwargs)
+        y_cat = keras.utils.to_categorical(y, self._classes)
+
+        super(Classifier, self).fit(x, y_cat, **kwargs)

@@ -7,6 +7,22 @@ import skimage.util
 
 
 def parse(pathname, size, channels):
+    """
+    Convert an image file to a NumPy array.
+
+    For microscopic image formats with OME support (e.g., .CIF), the javabridge JVM is required:
+
+        import bioformats
+        import javabridge
+
+        javabridge.start_vm(class_path=bioformats.JARS)
+
+    :param pathname: Image pathname.
+    :param size: Final image dimensions (size, size, channels).
+    :param channels: Image channels to extract.
+    :return: NumPy array of image data. If the file contains a single image, returns (size, size, channels). If the
+    file contains multiple image (e.g., is a .CIF file), returns (N_images, size, size, channels).
+    """
     ext = os.path.splitext(pathname)[-1].lower()
 
     if ext == ".cif":
@@ -65,7 +81,6 @@ def _resize(image, size):
 
 
 def _pad(image, pad_width):
-    # Pad with random noise sampled from the image background.
     sample = image[:10, :10]
 
     return numpy.pad(image, pad_width, _pad_normal, mean=numpy.mean(sample), std=numpy.std(sample))

@@ -11,6 +11,13 @@ import deepometry.model
 
 
 def create_model(input_shape=(32, 32, 1), classes=2):
+    """
+    Define and compile a deepometry model.
+
+    :param input_shape: Input data shape (rows, columns, channels).
+    :param classes: Number of classes.
+    :return: A compiled deepometry model.
+    """
     model = deepometry.model.Model(input_shape, classes)
 
     model.compile(
@@ -26,6 +33,13 @@ def create_model(input_shape=(32, 32, 1), classes=2):
 
 class Classifier(keras.wrappers.scikit_learn.KerasClassifier):
     def __init__(self, input_shape, classes, model_dir=None):
+        """
+        A scikit-learn compatible classifier using a deepometry model.
+
+        :param input_shape: Input data shape (rows, columns, channels).
+        :param classes: Number of classes.
+        :param model_dir: (Optional) Directory to save training logs and model checkpoints.
+        """
         callbacks = []
 
         if model_dir:
@@ -48,6 +62,13 @@ class Classifier(keras.wrappers.scikit_learn.KerasClassifier):
         super(Classifier, self).__init__(create_model, input_shape=input_shape, classes=classes, **options)
 
     def fit(self, x, y, **kwargs):
+        """
+        Fit classifier.
+
+        :param x: NumPy array of training data (N_samples, rows, columns channels).
+        :param y: NumPy array of one-hot encoded target values (N_samples, N_classes).
+        :param kwargs: (Optional) Arguments passed to keras.models.Sequential fit.
+        """
         if "class_weight" not in kwargs:
             kwargs["class_weight"] = sklearn.utils.compute_class_weight(
                 "balanced",

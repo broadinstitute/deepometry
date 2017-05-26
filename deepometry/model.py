@@ -23,6 +23,12 @@ def _block(filters, input_shape=None):
 
 class Model(keras.models.Sequential):
     def __init__(self, shape, classes):
+        """
+        A pre-defined model for single-cell image classification.
+
+        :param shape: Input data shape (rows, columns, channels). Recommended: rows >= 32, columns >= 32.
+        :param classes: Number of classes.
+        """
         layers = _block(32, input_shape=shape)
         layers += _block(64)
         layers += _block(128)

@@ -4,6 +4,8 @@ import keras.callbacks
 import keras.losses
 import keras.optimizers
 import keras.wrappers.scikit_learn
+import numpy
+import sklearn.utils
 
 import deepometry.model
 
@@ -41,4 +43,16 @@ class Classifier(keras.wrappers.scikit_learn.KerasClassifier):
             "verbose": 1
         }
 
+        self._classes = classes
+
         super(Classifier, self).__init__(create_model, input_shape=input_shape, classes=classes, **options)
+
+    def fit(self, x, y, **kwargs):
+        if "class_weight" not in kwargs:
+            kwargs["class_weight"] = sklearn.utils.compute_class_weight(
+                "balanced",
+                numpy.arange(self._classes),
+                numpy.nonzero(y)[1]
+            )
+
+        super(Classifier, self).fit(x, y, **kwargs)

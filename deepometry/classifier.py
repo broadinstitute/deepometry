@@ -1,43 +1,15 @@
 import os.path
 
 import keras.callbacks
-import keras.layers
 import keras.losses
-import keras.models
 import keras.optimizers
 import keras.wrappers.scikit_learn
 
-
-def _add_block(model, filters, input_shape=None):
-    if input_shape:
-        model.add(keras.layers.Conv2D(filters, (3, 3), padding="same", input_shape=input_shape))
-    else:
-        model.add(keras.layers.Conv2D(filters, (3, 3), padding="same"))
-    model.add(keras.layers.Activation("relu"))
-    model.add(keras.layers.normalization.BatchNormalization())
-
-    model.add(keras.layers.Conv2D(filters, (3, 3), padding="same"))
-    model.add(keras.layers.Activation("relu"))
-    model.add(keras.layers.normalization.BatchNormalization())
-
-    model.add(keras.layers.MaxPooling2D(pool_size=2, strides=None, padding="same"))
-
-    return model
+import deepometry.model
 
 
 def create_model(input_shape=(32, 32, 1), classes=2):
-    model = keras.models.Sequential()
-
-    model = _add_block(model, 32, input_shape=input_shape)
-    model = _add_block(model, 64)
-    model = _add_block(model, 128)
-    model = _add_block(model, 256)
-
-    model.add(keras.layers.Flatten())
-    model.add(keras.layers.Dense(1024, activation="relu"))
-    model.add(keras.layers.Dropout(0.5))
-    model.add(keras.layers.Dense(classes))
-    model.add(keras.layers.Activation("softmax"))
+    model = deepometry.model.Model(input_shape, classes)
 
     model.compile(
         optimizer=keras.optimizers.Adam(0.00001),

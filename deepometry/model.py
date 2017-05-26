@@ -2,34 +2,38 @@ import keras.layers
 import keras.models
 
 
-def _block(x, filters, downsample=True):
-    y = keras.layers.Conv2D(filters, kernel_size=(3, 3), padding="same")(x)
-    y = keras.layers.Activation("relu")(y)
-    y = keras.layers.normalization.BatchNormalization()(y)
+def _block(filters, input_shape=None):
+    layers = []
 
-    y = keras.layers.Conv2D(filters, kernel_size=(3, 3), padding="same")(y)
-    y = keras.layers.Activation("relu")(y)
-    y = keras.layers.normalization.BatchNormalization()(y)
+    if input_shape:
+        layers.append(keras.layers.Conv2D(filters, (3, 3), padding="same", input_shape=input_shape))
+    else:
+        layers.append(keras.layers.Conv2D(filters, (3, 3), padding="same"))
+    layers.append(keras.layers.Activation("relu"))
+    layers.append(keras.layers.normalization.BatchNormalization())
 
-    if downsample:
-        y = keras.layers.MaxPooling2D(pool_size=2, strides=None, padding="same")(y)
+    layers.append(keras.layers.Conv2D(filters, (3, 3), padding="same"))
+    layers.append(keras.layers.Activation("relu"))
+    layers.append(keras.layers.normalization.BatchNormalization())
 
-    return y
+    layers.append(keras.layers.MaxPooling2D(pool_size=2, strides=None, padding="same"))
+
+    return layers
 
 
-class Model(keras.models.Model):
+class Model(keras.models.Sequential):
     def __init__(self, shape, classes):
-        x = keras.layers.Input(shape)
+        layers = _block(32, input_shape=shape)
+        layers += _block(64)
+        layers += _block(128)
+        layers += _block(256)
 
-        y = _block(x, 32, downsample=False)
-        y = _block(y, 64)
-        y = _block(y, 128)
-        y = _block(y, 256)
+        layers += [
+            keras.layers.Flatten(),
+            keras.layers.Dense(1024, activation="relu"),
+            keras.layers.Dropout(0.5),
+            keras.layers.Dense(classes),
+            keras.layers.Activation("softmax")
+        ]
 
-        y = keras.layers.Flatten()(y)
-        y = keras.layers.Dense(1024, activation="relu")(y)
-        y = keras.layers.Dropout(0.5)(y)
-        y = keras.layers.Dense(classes)(y)
-        y = keras.layers.Activation("softmax")(y)
-
-        super(Model, self).__init__(inputs=x, outputs=y)
+        super(Model, self).__init__(layers)

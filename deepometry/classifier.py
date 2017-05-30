@@ -1,11 +1,10 @@
-import os.path
-
 import keras.callbacks
 import keras.losses
 import keras.optimizers
 import keras.utils
 import keras.wrappers.scikit_learn
 import numpy
+import numpy.random
 import sklearn.utils
 
 import deepometry.model
@@ -33,7 +32,7 @@ def create_model(input_shape=(32, 32, 1), classes=2):
 
 
 class Classifier(keras.wrappers.scikit_learn.KerasClassifier):
-    def __init__(self, input_shape, classes, model_dir=None):
+    def __init__(self, input_shape, classes):
         """
         A scikit-learn compatible classifier using a deepometry model.
 
@@ -41,17 +40,9 @@ class Classifier(keras.wrappers.scikit_learn.KerasClassifier):
         :param classes: Number of classes.
         :param model_dir: (Optional) Directory to save training logs and model checkpoints.
         """
-        callbacks = []
-
-        if model_dir:
-            callbacks = [
-                keras.callbacks.CSVLogger(os.path.join(model_dir, "training.csv")),
-                keras.callbacks.ModelCheckpoint(os.path.join(model_dir, "checkpoint.hdf5"))
-            ]
-
         options = {
             "batch_size": 32,
-            "callbacks": callbacks,
+            "callbacks": [],
             "epochs": 8,
             "shuffle": True,
             "validation_split": 0.2,
@@ -74,8 +65,15 @@ class Classifier(keras.wrappers.scikit_learn.KerasClassifier):
             kwargs["class_weight"] = sklearn.utils.compute_class_weight(
                 "balanced",
                 numpy.arange(self._classes),
-                numpy.nonzero(y)[1]
+                y
             )
+
+        if "shuffle" not in kwargs or kwargs["shuffle"]:
+            indexes = numpy.random.permutation(len(x))
+
+            x = numpy.asarray([x[index] for index in indexes])
+
+            y = numpy.asarray([y[index] for index in indexes])
 
         y_cat = keras.utils.to_categorical(y, self._classes)
 

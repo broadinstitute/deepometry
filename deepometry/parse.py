@@ -1,3 +1,4 @@
+import glob
 import numpy
 import os.path
 
@@ -6,6 +7,14 @@ import javabridge
 import skimage.util
 
 
+@profile
+def parse_directory(directory, size, channels):
+    tensor = [parse(pathname, size, channels) for pathname in glob.glob(os.path.join(directory, "*"))]
+
+    return numpy.concatenate(tensor)
+
+
+@profile
 def parse(pathname, size, channels):
     """
     Convert an image file to a NumPy array.
@@ -28,12 +37,13 @@ def parse(pathname, size, channels):
     if ext == ".cif":
         return _parse_cif(pathname, size, channels)
 
-    if ext in [".tif", ".tiff"]:
-        return _parse_tiff(pathname, size, channels)
+    # if ext in [".tif", ".tiff"]:
+    #     return _parse_tiff(pathname, size, channels)
 
     raise NotImplementedError("Unsupported file format: {}".format(ext))
 
 
+@profile
 def _parse_cif(pathname, size, channels):
     reader = bioformats.formatreader.get_image_reader("tmp", path=pathname)
 
@@ -58,6 +68,7 @@ def _parse_tiff(pathname, size, channels):
     pass
 
 
+@profile
 def _resize(image, size):
     column_adjust = size - image.shape[0]
     column_adjust_start = int(numpy.floor(column_adjust / 2.0))
@@ -80,12 +91,14 @@ def _resize(image, size):
     return resized
 
 
+@profile
 def _pad(image, pad_width):
     sample = image[:10, :10]
 
     return numpy.pad(image, pad_width, _pad_normal, mean=numpy.mean(sample), std=numpy.std(sample))
 
 
+@profile
 def _pad_normal(vector, pad_width, iaxis, kwargs):
     if pad_width[0] > 0:
         vector[:pad_width[0]] = numpy.random.normal(kwargs["mean"], kwargs["std"], vector[:pad_width[0]].shape)
@@ -94,3 +107,11 @@ def _pad_normal(vector, pad_width, iaxis, kwargs):
         vector[-pad_width[1]:] = numpy.random.normal(kwargs["mean"], kwargs["std"], vector[-pad_width[1]:].shape)
 
     return vector
+
+
+if __name__ == '__main__':
+    javabridge.start_vm(class_path=bioformats.JARS)
+
+    parse_directory("/home/mcquin/data/cif/training/normal", 48, [1, 2, 10, 11])
+
+    javabridge.kill_vm()

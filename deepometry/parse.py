@@ -4,17 +4,17 @@ import os.path
 
 import bioformats.formatreader
 import javabridge
+import joblib
+import skimage.exposure
 import skimage.util
 
 
-@profile
 def parse_directory(directory, size, channels):
     tensor = [parse(pathname, size, channels) for pathname in glob.glob(os.path.join(directory, "*"))]
 
     return numpy.concatenate(tensor)
 
 
-@profile
 def parse(pathname, size, channels):
     """
     Convert an image file to a NumPy array.
@@ -43,32 +43,39 @@ def parse(pathname, size, channels):
     raise NotImplementedError("Unsupported file format: {}".format(ext))
 
 
-@profile
 def _parse_cif(pathname, size, channels):
     reader = bioformats.formatreader.get_image_reader("tmp", path=pathname)
 
     image_count = javabridge.call(reader.metadata, "getImageCount", "()I")
 
-    tensor = ()
+    images = numpy.zeros((image_count // 2, size, size, len(channels)))
 
-    for channel in channels:
-        images = numpy.asarray([
-            _resize(
-                reader.read(c=channel, series=index),
-                size
-            ) for index in range(image_count)[::2]
-        ])
+    # for (channel_index, channel), image_index in itertools.product(enumerate(channels), range(0, image_count, 2)):
+    #     images[image_index // 2, :, :, channel_index] = _resize(reader.read(c=channel, series=image_index), size)
 
-        tensor += (images,)
+    # for (channel_index, channel) in enumerate(channels):
+    for image_index in range(0, image_count, 2):
+        image = reader.read(series=image_index)
 
-    return numpy.stack(tensor, axis=3)
+        for (channel_index, channel) in enumerate(channels):
+            images[image_index // 2, :, :, channel_index] = _resize(image[channel_index], size)
+
+
+        # reshaped = joblib.Parallel(n_jobs=len(channels), backend="threading")(joblib.delayed(_resize)(image[:, :, channel], size) for channel in channels)
+        #
+        # reshaped = numpy.asarray(reshaped)
+        #
+        # reshaped = numpy.moveaxis(reshaped, 0, -1)
+
+        # images[image_index // 2] = reshaped
+
+    return images
 
 
 def _parse_tiff(pathname, size, channels):
     pass
 
 
-@profile
 def _resize(image, size):
     column_adjust = size - image.shape[0]
     column_adjust_start = int(numpy.floor(column_adjust / 2.0))
@@ -78,27 +85,31 @@ def _resize(image, size):
     row_adjust_start = int(numpy.floor(row_adjust / 2.0))
     row_adjust_end = int(numpy.ceil(row_adjust / 2.0))
 
-    if column_adjust <= 0:
-        resized = skimage.util.crop(image, ((numpy.abs(column_adjust_start), numpy.abs(column_adjust_end)), (0, 0)))
-    else:
-        resized = _pad(image, ((column_adjust_start, column_adjust_end), (0, 0)))
+    resized = skimage.util.crop(
+        image,
+        (
+            numpy.abs(numpy.minimum((column_adjust_start, column_adjust_end), (0, 0))),
+            numpy.abs(numpy.minimum((row_adjust_start, row_adjust_end), (0, 0)))
+        )
+    )
 
-    if row_adjust <= 0:
-        resized = skimage.util.crop(resized, ((0, 0), (numpy.abs(row_adjust_start), numpy.abs(row_adjust_end))))
-    else:
-        resized = _pad(resized, ((0, 0), (row_adjust_start, row_adjust_end)))
+    return skimage.exposure.rescale_intensity(
+        _pad(
+            resized,
+            (
+                numpy.maximum((column_adjust_start, column_adjust_end), (0, 0)),
+                numpy.maximum((row_adjust_start, row_adjust_end), (0, 0))
+            )
+        )
+    )
 
-    return resized
 
-
-@profile
 def _pad(image, pad_width):
     sample = image[:10, :10]
 
     return numpy.pad(image, pad_width, _pad_normal, mean=numpy.mean(sample), std=numpy.std(sample))
 
 
-@profile
 def _pad_normal(vector, pad_width, iaxis, kwargs):
     if pad_width[0] > 0:
         vector[:pad_width[0]] = numpy.random.normal(kwargs["mean"], kwargs["std"], vector[:pad_width[0]].shape)
@@ -107,11 +118,3 @@ def _pad_normal(vector, pad_width, iaxis, kwargs):
         vector[-pad_width[1]:] = numpy.random.normal(kwargs["mean"], kwargs["std"], vector[-pad_width[1]:].shape)
 
     return vector
-
-
-if __name__ == '__main__':
-    javabridge.start_vm(class_path=bioformats.JARS)
-
-    parse_directory("/home/mcquin/data/cif/training/normal", 48, [1, 2, 10, 11])
-
-    javabridge.kill_vm()

@@ -1,3 +1,5 @@
+import pkg_resources
+
 import keras.callbacks
 import keras.losses
 import keras.optimizers
@@ -21,7 +23,7 @@ def create_model(input_shape=(32, 32, 1), classes=2):
     model = deepometry.model.Model(input_shape, classes)
 
     model.compile(
-        optimizer=keras.optimizers.Adam(0.00001),
+        optimizer=keras.optimizers.Adam(0.0001),
         loss=keras.losses.categorical_crossentropy,
         metrics=[
             "accuracy"
@@ -42,8 +44,12 @@ class Classifier(keras.wrappers.scikit_learn.KerasClassifier):
         """
         options = {
             "batch_size": 32,
-            "callbacks": [],
-            "epochs": 8,
+            "callbacks": [
+                keras.callbacks.EarlyStopping(patience=8),
+                keras.callbacks.ModelCheckpoint(pkg_resources.resource_filename("deepometry", "data/checkpoint.hdf5")),
+                keras.callbacks.ReduceLROnPlateau()
+            ],
+            "epochs": 32,
             "shuffle": True,
             "validation_split": 0.2,
             "verbose": 1

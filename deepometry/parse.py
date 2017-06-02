@@ -50,24 +50,11 @@ def _parse_cif(pathname, size, channels):
 
     images = numpy.zeros((image_count // 2, size, size, len(channels)))
 
-    # for (channel_index, channel), image_index in itertools.product(enumerate(channels), range(0, image_count, 2)):
-    #     images[image_index // 2, :, :, channel_index] = _resize(reader.read(c=channel, series=image_index), size)
-
-    # for (channel_index, channel) in enumerate(channels):
     for image_index in range(0, image_count, 2):
         image = reader.read(series=image_index)
 
         for (channel_index, channel) in enumerate(channels):
-            images[image_index // 2, :, :, channel_index] = _resize(image[channel_index], size)
-
-
-        # reshaped = joblib.Parallel(n_jobs=len(channels), backend="threading")(joblib.delayed(_resize)(image[:, :, channel], size) for channel in channels)
-        #
-        # reshaped = numpy.asarray(reshaped)
-        #
-        # reshaped = numpy.moveaxis(reshaped, 0, -1)
-
-        # images[image_index // 2] = reshaped
+            images[image_index // 2, :, :, channel_index] = _resize(image[:, :, channel_index], size)
 
     return images
 

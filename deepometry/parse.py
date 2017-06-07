@@ -4,7 +4,7 @@ import os.path
 
 import bioformats.formatreader
 import javabridge
-import joblib
+import scipy.stats
 import skimage.exposure
 import skimage.util
 
@@ -48,19 +48,25 @@ def _parse_cif(pathname, size, channels):
 
     image_count = javabridge.call(reader.metadata, "getImageCount", "()I")
 
-    images = numpy.zeros((image_count // 2, size, size, len(channels)))
+    images = numpy.zeros((image_count // 2, size, size, len(channels)), dtype=numpy.uint8)
 
     for image_index in range(0, image_count, 2):
         image = reader.read(series=image_index)
 
         for (channel_index, channel) in enumerate(channels):
-            images[image_index // 2, :, :, channel_index] = _resize(image[:, :, channel_index], size)
+            images[image_index // 2, :, :, channel_index] = _rescale(_resize(image[:, :, channel_index], size))
 
     return images
 
 
 def _parse_tiff(pathname, size, channels):
     pass
+
+
+def _rescale(image):
+    vmin, vmax = scipy.stats.scoreatpercentile(image, (0.5, 99.5))
+
+    return skimage.exposure.rescale_intensity(image, in_range=(vmin, vmax), out_range=numpy.uint8).astype(numpy.uint8)
 
 
 def _resize(image, size):
@@ -92,7 +98,7 @@ def _resize(image, size):
 
 
 def _pad(image, pad_width):
-    sample = image[:10, :10]
+    sample = image[-10:, -10:]
 
     return numpy.pad(image, pad_width, _pad_normal, mean=numpy.mean(sample), std=numpy.std(sample))
 

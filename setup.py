@@ -10,11 +10,12 @@ setuptools.setup(
         ]
     },
     install_requires=[
-        "imbalanced-learn",
         "javabridge",
         "keras",
+        "numpy",
         "python-bioformats",
-        "scikit-learn"
+        "scikit-learn",
+        "scipy"
     ],
     license="BSD",
     name="deepometry",

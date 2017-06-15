@@ -1,0 +1,8 @@
+before_install: pip install tensorflow
+cache: pip
+dist: trusty
+env:
+  - KERAS_BACKEND=tensorflow
+install: pip install --editable .
+language: python
+script: pytest

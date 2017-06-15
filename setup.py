@@ -12,6 +12,7 @@ setuptools.setup(
     install_requires=[
         "javabridge",
         "keras",
+        "keras-resnet",
         "numpy",
         "python-bioformats",
         "scikit-learn",

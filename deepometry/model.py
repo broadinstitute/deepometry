@@ -1,45 +1,49 @@
+import pkg_resources
+
+import keras.callbacks
 import keras.layers
 import keras.models
+import keras_resnet.models
 
 
-def _block(filters, input_shape=None):
-    layers = []
-
-    if input_shape:
-        layers.append(keras.layers.Conv2D(filters, (3, 3), padding="same", input_shape=input_shape))
-    else:
-        layers.append(keras.layers.Conv2D(filters, (3, 3), padding="same"))
-    layers.append(keras.layers.Activation("relu"))
-    layers.append(keras.layers.normalization.BatchNormalization())
-
-    layers.append(keras.layers.Conv2D(filters, (3, 3), padding="same"))
-    layers.append(keras.layers.Activation("relu"))
-    layers.append(keras.layers.normalization.BatchNormalization())
-
-    layers.append(keras.layers.MaxPooling2D(pool_size=2, strides=None, padding="same"))
-
-    return layers
-
-
-class Model(keras.models.Sequential):
-    def __init__(self, shape, classes):
+class Model(keras.models.Model):
+    def __init__(self, shape=(48, 48, 3), classes=4):
         """
-        A pre-defined model for single-cell image classification.
+        Image classification model for single-cell images.
 
-        :param shape: Input data shape (rows, columns, channels). Recommended: rows >= 32, columns >= 32.
-        :param classes: Number of classes.
+        :param shape: Image shape (width, height, channels).
+        :param classes: Number of predicted classes.
         """
-        layers = _block(32, input_shape=shape)
-        layers += _block(64)
-        layers += _block(128)
-        layers += _block(256)
+        x = keras.layers.Input(shape)
 
-        layers += [
-            keras.layers.Flatten(),
-            keras.layers.Dense(1024, activation="relu"),
-            keras.layers.Dropout(0.5),
-            keras.layers.Dense(classes),
-            keras.layers.Activation("softmax")
+        y = keras_resnet.ResNet200(x)
+
+        y = keras.layers.Flatten()(y.output)
+
+        y = keras.layers.Dense(classes, activation="softmax")(y)
+
+        self.batch_size = 256
+
+        self.callbacks = [
+            keras.callbacks.CSVLogger(pkg_resources.resource_filename("deepometry", "data/training.csv")),
+            keras.callbacks.EarlyStopping(patience=20),
+            keras.callbacks.ModelCheckpoint(pkg_resources.resource_filename("deepometry", "data/checkpoint.hdf5")),
+            keras.callbacks.ReduceLROnPlateau()
         ]
 
-        super(Model, self).__init__(layers)
+        super(Model, self).__init__(x, y)
+
+    def compile(self, optimizer="adam",
+                loss="categorical_crossentropy",
+                metrics=["accuracy"],
+                loss_weights=None,
+                sample_weight_mode=None,
+                **kwargs):
+        super(Model, self).compile(
+            optimizer=optimizer,
+            loss=loss,
+            metrics=metrics,
+            loss_weights=loss_weights,
+            sample_weight_mode=sample_weight_mode,
+            **kwargs
+        )

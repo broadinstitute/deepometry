@@ -1,0 +1,7 @@
+cache: pip
+dist: trusty
+install:
+  - pip install --upgrade pytest-mock
+  - pip install --upgrade --editable .
+language: python
+script: pytest

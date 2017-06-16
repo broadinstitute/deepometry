@@ -4,6 +4,10 @@ import setuptools
 setuptools.setup(
     author="Claire McQuin",
     author_email="mcquincl@gmail.com",
+    entry_points="""
+    [console_scripts]
+    deepometry=deepometry.command:command
+    """,
     extras_require={
         "test": [
             "pytest",
@@ -11,6 +15,7 @@ setuptools.setup(
         ]
     },
     install_requires=[
+        "click",
         "javabridge",
         "numpy",
         "python-bioformats",

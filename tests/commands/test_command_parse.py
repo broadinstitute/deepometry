@@ -3,6 +3,7 @@ import time
 
 import bioformats
 import click.testing
+import pkg_resources
 import pytest
 
 import deepometry.command
@@ -69,7 +70,16 @@ def test_parse_default(filenames, input_directory, labels, mocker, output_direct
     assert cmd.exit_code == 0, cmd.output
 
     # Assert the JVM was started.
-    start_vm.assert_called_once_with(class_path=bioformats.JARS)
+    start_vm.assert_called_once_with(
+        args=[
+            "-Dlogback.configurationFile={}".format(
+                pkg_resources.resource_filename("deepometry", "resources/logback.xml")
+            ),
+            "-Dloglevel=OFF"
+        ],
+        class_path=bioformats.JARS,
+        run_headless=True
+    )
 
     # Assert we called deepometry.parse.parse with the expected parameters.
     expected_calls = []
@@ -121,7 +131,16 @@ def test_parse_with_image_size(filenames, input_directory, labels, mocker, outpu
     assert cmd.exit_code == 0, cmd.output
 
     # Assert the JVM was started.
-    start_vm.assert_called_once_with(class_path=bioformats.JARS)
+    start_vm.assert_called_once_with(
+        args=[
+            "-Dlogback.configurationFile={}".format(
+                pkg_resources.resource_filename("deepometry", "resources/logback.xml")
+            ),
+            "-Dloglevel=OFF"
+        ],
+        class_path=bioformats.JARS,
+        run_headless=True
+    )
 
     # Assert we called deepometry.parse.parse with the expected parameters.
     expected_calls = []
@@ -173,7 +192,16 @@ def test_parse_with_channels(filenames, input_directory, labels, mocker, output_
     assert cmd.exit_code == 0, cmd.output
 
     # Assert the JVM was started.
-    start_vm.assert_called_once_with(class_path=bioformats.JARS)
+    start_vm.assert_called_once_with(
+        args=[
+            "-Dlogback.configurationFile={}".format(
+                pkg_resources.resource_filename("deepometry", "resources/logback.xml")
+            ),
+            "-Dloglevel=OFF"
+        ],
+        class_path=bioformats.JARS,
+        run_headless=True
+    )
 
     # Assert we called deepometry.parse.parse with the expected parameters.
     expected_calls = []
@@ -185,6 +213,67 @@ def test_parse_with_channels(filenames, input_directory, labels, mocker, output_
             expected_calls.append(
                 mocker.call(os.path.join(str(input_directory), label, filename), 48, expected_channels)
             )
+
+    assert parser.call_args_list == expected_calls
+
+    # Assert the parsed images were saved as NumPy arrays
+    for label in labels:
+        expected_subdirectory = os.path.join(str(output_directory), label)
+
+        assert os.path.exists(expected_subdirectory)
+
+        assert os.path.isdir(expected_subdirectory)
+
+        for filename in filenames:
+            name, _ = os.path.splitext(filename)
+
+            expected_pathname = os.path.join(str(output_directory), label, "{}.npy".format(name))
+
+            assert os.path.exists(expected_pathname)
+
+            assert os.path.isfile(expected_pathname)
+
+    # Assert we stopped the JVM.
+    stop_vm.assert_called_once()
+
+
+def test_parse_verbose(filenames, input_directory, labels, mocker, output_directory):
+    runner = click.testing.CliRunner()
+
+    start_vm = mocker.patch("javabridge.start_vm")
+
+    stop_vm = mocker.patch("javabridge.kill_vm", unsafe=True)
+
+    parser = mocker.patch("deepometry.parse.parse")
+
+    deepometry.parse.parse.return_value = parser
+
+    cmd = runner.invoke(
+        deepometry.command.command,
+        ["parse", str(input_directory), str(output_directory), "--verbose"]
+    )
+
+    # Assert the command exited successfully.
+    assert cmd.exit_code == 0, cmd.output
+
+    # Assert the JVM was started.
+    start_vm.assert_called_once_with(
+        args=[
+            "-Dlogback.configurationFile={}".format(
+                pkg_resources.resource_filename("deepometry", "resources/logback.xml")
+            ),
+            "-Dloglevel=DEBUG"
+        ],
+        class_path=bioformats.JARS,
+        run_headless=True
+    )
+
+    # Assert we called deepometry.parse.parse with the expected parameters.
+    expected_calls = []
+
+    for label in labels:
+        for filename in filenames:
+            expected_calls.append(mocker.call(os.path.join(str(input_directory), label, filename), 48, None))
 
     assert parser.call_args_list == expected_calls
 

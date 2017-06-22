@@ -5,6 +5,7 @@ import bioformats
 import click
 import javabridge
 import numpy
+import pkg_resources
 
 import deepometry.parse
 
@@ -44,7 +45,11 @@ import deepometry.parse
          " larger than the specified size will be cropped toward the image center. Image dimensions smaller than the"
          " specified size will be padded with random noise following the distribution of the image background."
 )
-def command(input, output, channels, image_size):
+@click.option(
+    "--verbose",
+    is_flag=True
+)
+def command(input, output, channels, image_size, verbose):
     input_directory = os.path.realpath(input)
 
     output_directory = os.path.realpath(output)
@@ -57,7 +62,16 @@ def command(input, output, channels, image_size):
     parsed_channels = None if channels is None else _parse_channels(channels)
 
     try:
-        javabridge.start_vm(class_path=bioformats.JARS)
+        log_config = pkg_resources.resource_filename("deepometry", "resources/logback.xml")
+
+        javabridge.start_vm(
+            args=[
+                "-Dlogback.configurationFile={}".format(log_config),
+                "-Dloglevel={}".format("DEBUG" if verbose else "OFF")
+            ],
+            class_path=bioformats.JARS,
+            run_headless=True
+        )
 
         for label_directory in label_directories:
             _, label = os.path.split(label_directory)

@@ -30,6 +30,11 @@ setuptools.setup(
             "tests"
         ]
     ),
+    package_data={
+        "deepometry": [
+            "resources/logback.xml"
+        ]
+    },
     url="https://github.com/broadinstitute/deepometry",
     version="0.0.1"
 )

@@ -1,7 +1,10 @@
 cache: pip
 dist: trusty
 install:
-  - pip install --upgrade pytest-mock
+  - pip install --upgrade pytest pytest-mock
   - pip install --upgrade --editable .
 language: python
+python:
+  - "2.7"
+  - "3.5"
 script: pytest

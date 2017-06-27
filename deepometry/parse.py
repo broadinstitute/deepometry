@@ -8,7 +8,7 @@ import skimage.exposure
 import skimage.util
 
 
-def parse(pathname, size, channels):
+def parse(pathname, size, channels=None):
     """
     Convert an .CIF image file to a NumPy array. The javabridge JVM is required:
 
@@ -42,13 +42,18 @@ def _parse_cif(pathname, size, channels):
     # TODO: An overflow error occurs when reading image 190663 and above. :(
     image_count = numpy.min((image_count, 190662))
 
+    if channels is None:
+        channel_count = javabridge.call(reader.metadata, "getChannelCount", "(I)I", 0)
+
+        channels = range(channel_count)
+
     images = numpy.zeros((image_count // 2, size, size, len(channels)), dtype=numpy.uint8)
 
     for image_index in range(0, image_count, 2):
         image = reader.read(series=image_index)
 
         for (channel_index, channel) in enumerate(channels):
-            images[image_index // 2, :, :, channel_index] = _rescale(_resize(image[:, :, channel_index], size))
+            images[image_index // 2, :, :, channel_index] = _rescale(_resize(image[:, :, channel], size))
 
     return images
 

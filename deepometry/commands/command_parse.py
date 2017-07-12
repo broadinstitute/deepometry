@@ -4,7 +4,6 @@ import os.path
 import bioformats
 import click
 import javabridge
-import numpy
 import pkg_resources
 
 import deepometry.parse
@@ -15,12 +14,12 @@ import deepometry.parse
     help="""
     Parse a directory of .CIF files.
 
-    Convert .CIFs to NumPy arrays, which can be used as training, validation, or test data for a classifier.
-    Subdirectories of INPUT are class labels and subdirectory contents are .CIF files containing data corresponding to
+    Convert CIF files to NPY arrays, which can be used as training, validation, or test data for a classifier.
+    Subdirectories of INPUT are class labels and subdirectory contents are CIF files containing data corresponding to
     that label.
 
     The OUTPUT directory will be created if it does not already exist. Subdirectories of OUTPUT are class labels
-    corresponding to the subdirectories of INPUT. The contents of the subdirectories are .NPY files containing parsed
+    corresponding to the subdirectories of INPUT. The contents of the subdirectories are NPY files containing parsed
     .CIF image data.
     """
 )
@@ -109,6 +108,4 @@ def _parse_directory(input, output, channels, image_size):
 
         name, _ = os.path.splitext(filename)
 
-        images = deepometry.parse.parse(pathname, image_size, channels)
-
-        numpy.save(os.path.join(output, "{}.npy".format(name)), images)
+        deepometry.parse.parse(pathname, output, image_size, channels=channels)

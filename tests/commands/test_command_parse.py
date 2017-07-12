@@ -86,26 +86,16 @@ def test_parse_default(filenames, input_directory, labels, mocker, output_direct
 
     for label in labels:
         for filename in filenames:
-            expected_calls.append(mocker.call(os.path.join(str(input_directory), label, filename), 48, None))
+            expected_calls.append(
+                mocker.call(
+                    os.path.join(str(input_directory), label, filename),
+                    os.path.join(str(output_directory), label),
+                    48,
+                    channels=None
+                )
+            )
 
     assert parser.call_args_list == expected_calls
-
-    # Assert the parsed images were saved as NumPy arrays
-    for label in labels:
-        expected_subdirectory = os.path.join(str(output_directory), label)
-
-        assert os.path.exists(expected_subdirectory)
-
-        assert os.path.isdir(expected_subdirectory)
-
-        for filename in filenames:
-            name, _ = os.path.splitext(filename)
-
-            expected_pathname = os.path.join(str(output_directory), label, "{}.npy".format(name))
-
-            assert os.path.exists(expected_pathname)
-
-            assert os.path.isfile(expected_pathname)
 
     # Assert we stopped the JVM.
     stop_vm.assert_called_once()
@@ -147,26 +137,16 @@ def test_parse_with_image_size(filenames, input_directory, labels, mocker, outpu
 
     for label in labels:
         for filename in filenames:
-            expected_calls.append(mocker.call(os.path.join(str(input_directory), label, filename), 56, None))
+            expected_calls.append(
+                mocker.call(
+                    os.path.join(str(input_directory), label, filename),
+                    os.path.join(str(output_directory), label),
+                    56,
+                    channels=None
+                )
+            )
 
     assert parser.call_args_list == expected_calls
-
-    # Assert the parsed images were saved as NumPy arrays
-    for label in labels:
-        expected_subdirectory = os.path.join(str(output_directory), label)
-
-        assert os.path.exists(expected_subdirectory)
-
-        assert os.path.isdir(expected_subdirectory)
-
-        for filename in filenames:
-            name, _ = os.path.splitext(filename)
-
-            expected_pathname = os.path.join(str(output_directory), label, "{}.npy".format(name))
-
-            assert os.path.exists(expected_pathname)
-
-            assert os.path.isfile(expected_pathname)
 
     # Assert we stopped the JVM.
     stop_vm.assert_called_once()
@@ -211,27 +191,15 @@ def test_parse_with_channels(filenames, input_directory, labels, mocker, output_
     for label in labels:
         for filename in filenames:
             expected_calls.append(
-                mocker.call(os.path.join(str(input_directory), label, filename), 48, expected_channels)
+                mocker.call(
+                    os.path.join(str(input_directory), label, filename),
+                    os.path.join(str(output_directory), label),
+                    48,
+                    channels=expected_channels
+                )
             )
 
     assert parser.call_args_list == expected_calls
-
-    # Assert the parsed images were saved as NumPy arrays
-    for label in labels:
-        expected_subdirectory = os.path.join(str(output_directory), label)
-
-        assert os.path.exists(expected_subdirectory)
-
-        assert os.path.isdir(expected_subdirectory)
-
-        for filename in filenames:
-            name, _ = os.path.splitext(filename)
-
-            expected_pathname = os.path.join(str(output_directory), label, "{}.npy".format(name))
-
-            assert os.path.exists(expected_pathname)
-
-            assert os.path.isfile(expected_pathname)
 
     # Assert we stopped the JVM.
     stop_vm.assert_called_once()
@@ -273,26 +241,16 @@ def test_parse_verbose(filenames, input_directory, labels, mocker, output_direct
 
     for label in labels:
         for filename in filenames:
-            expected_calls.append(mocker.call(os.path.join(str(input_directory), label, filename), 48, None))
+            expected_calls.append(
+                mocker.call(
+                    os.path.join(str(input_directory), label, filename),
+                    os.path.join(str(output_directory), label),
+                    48,
+                    channels=None
+                )
+            )
 
     assert parser.call_args_list == expected_calls
-
-    # Assert the parsed images were saved as NumPy arrays
-    for label in labels:
-        expected_subdirectory = os.path.join(str(output_directory), label)
-
-        assert os.path.exists(expected_subdirectory)
-
-        assert os.path.isdir(expected_subdirectory)
-
-        for filename in filenames:
-            name, _ = os.path.splitext(filename)
-
-            expected_pathname = os.path.join(str(output_directory), label, "{}.npy".format(name))
-
-            assert os.path.exists(expected_pathname)
-
-            assert os.path.isfile(expected_pathname)
 
     # Assert we stopped the JVM.
     stop_vm.assert_called_once()

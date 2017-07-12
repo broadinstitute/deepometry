@@ -1,3 +1,6 @@
+import glob
+import os.path
+
 import bioformats.formatreader
 import javabridge
 import numpy
@@ -9,7 +12,7 @@ import skimage.exposure
 import deepometry.parse
 
 
-def test_parse_larger_image(mocker):
+def test_parse_larger_image(mocker, tmpdir):
     mocker.patch("bioformats.formatreader.get_image_reader")
 
     reader = mocker.patch("bioformats.formatreader.ImageReader")
@@ -22,16 +25,24 @@ def test_parse_larger_image(mocker):
 
     reader.read.return_value = numpy.random.rand(51, 42, 5)
 
-    images = deepometry.parse.parse("cells.cif", 32, [0])
+    output_directory = tmpdir.mkdir("output")
+
+    deepometry.parse.parse("cells.cif", str(output_directory), 32, channels=[0])
 
     bioformats.formatreader.get_image_reader.assert_called_with("tmp", path="cells.cif")
 
-    assert images.shape == (1, 32, 32, 1)
+    parsed_pathnames = glob.glob(os.path.join(str(output_directory), "*.npy"))
 
-    assert images.dtype == numpy.uint8
+    assert len(parsed_pathnames) == 1
+
+    image = numpy.load(parsed_pathnames[0])
+
+    assert image.shape == (32, 32, 1)
+
+    assert image.dtype == numpy.uint8
 
 
-def test_parse_smaller_image(mocker):
+def test_parse_smaller_image(mocker, tmpdir):
     mocker.patch("bioformats.formatreader.get_image_reader")
 
     reader = mocker.patch("bioformats.formatreader.ImageReader")
@@ -44,16 +55,23 @@ def test_parse_smaller_image(mocker):
 
     reader.read.return_value = numpy.random.rand(28, 31, 5)
 
-    images = deepometry.parse.parse("cells.cif", 32, [0])
+    output_directory = tmpdir.mkdir("output")
+
+    deepometry.parse.parse("cells.cif", str(output_directory), 32, channels=[0])
 
     bioformats.formatreader.get_image_reader.assert_called_with("tmp", path="cells.cif")
 
-    assert images.shape == (1, 32, 32, 1)
+    parsed_pathnames = glob.glob(os.path.join(str(output_directory), "*.npy"))
 
-    assert images.dtype == numpy.uint8
+    assert len(parsed_pathnames) == 1
 
+    image = numpy.load(parsed_pathnames[0])
 
-def test_parse_larger_smaller_image(mocker):
+    assert image.shape == (32, 32, 1)
+
+    assert image.dtype == numpy.uint8
+
+def test_parse_larger_smaller_image(mocker, tmpdir):
     mocker.patch("bioformats.formatreader.get_image_reader")
 
     reader = mocker.patch("bioformats.formatreader.ImageReader")
@@ -66,16 +84,24 @@ def test_parse_larger_smaller_image(mocker):
 
     reader.read.return_value = numpy.random.rand(28, 43, 5)
 
-    images = deepometry.parse.parse("cells.cif", 32, [0])
+    output_directory = tmpdir.mkdir("output")
+
+    deepometry.parse.parse("cells.cif", str(output_directory), 32, channels=[0])
 
     bioformats.formatreader.get_image_reader.assert_called_with("tmp", path="cells.cif")
 
-    assert images.shape == (1, 32, 32, 1)
+    parsed_pathnames = glob.glob(os.path.join(str(output_directory), "*.npy"))
 
-    assert images.dtype == numpy.uint8
+    assert len(parsed_pathnames) == 1
+
+    image = numpy.load(parsed_pathnames[0])
+
+    assert image.shape == (32, 32, 1)
+
+    assert image.dtype == numpy.uint8
 
 
-def test_parse_channels(mocker):
+def test_parse_channels(mocker, tmpdir):
     mocker.patch("bioformats.formatreader.get_image_reader")
 
     reader = mocker.patch("bioformats.formatreader.ImageReader")
@@ -86,27 +112,35 @@ def test_parse_channels(mocker):
 
     javabridge.call.return_value = 2
 
-    image = numpy.ones((48, 48, 5), dtype=numpy.uint8)
+    cif_image = numpy.random.rand(48, 48, 5)
 
-    reader.read.return_value = image
+    reader.read.return_value = cif_image
 
-    images = deepometry.parse.parse("cells.cif", 48, [0, 3, 4])
+    output_directory = tmpdir.mkdir("output")
+
+    deepometry.parse.parse("cells.cif", str(output_directory), 48, channels=[0, 3, 4])
 
     bioformats.formatreader.get_image_reader.assert_called_with("tmp", path="cells.cif")
 
-    assert images.shape == (1, 48, 48, 3)
+    parsed_pathnames = glob.glob(os.path.join(str(output_directory), "*.npy"))
 
-    assert images.dtype == numpy.uint8
+    assert len(parsed_pathnames) == 1
 
-    expected = numpy.zeros((1, 48, 48, 3), dtype=numpy.uint8)
+    image = numpy.load(parsed_pathnames[0])
+
+    assert image.shape == (48, 48, 3)
+
+    assert image.dtype == numpy.uint8
+
+    expected = numpy.zeros((48, 48, 3), dtype=numpy.uint8)
 
     for index, channel in enumerate([0, 3, 4]):
-        vmin, vmax = scipy.stats.scoreatpercentile(image[:, :, channel], (0.5, 99.5))
+        vmin, vmax = scipy.stats.scoreatpercentile(cif_image[:, :, channel], (0.5, 99.5))
 
-        expected[0, :, :, index] = skimage.exposure.rescale_intensity(
-            image[:, :, channel],
+        expected[:, :, index] = skimage.exposure.rescale_intensity(
+            cif_image[:, :, channel],
             in_range=(vmin, vmax),
             out_range=numpy.uint8
         ).astype(numpy.uint8)
 
-    numpy.testing.assert_array_equal(images, expected)
+    numpy.testing.assert_array_equal(image, expected)

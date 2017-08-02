@@ -1,8 +1,9 @@
+before_install:
+  - pip install tensorflow
 cache: pip
 dist: trusty
 install:
-  - pip install --upgrade pytest pytest-mock
-  - pip install --upgrade --editable .
+  - pip install --upgrade --editable .[test]
 language: python
 python:
   - "2.7"

@@ -1,12 +1,19 @@
+import csv
 import os.path
 
 import keras
 import keras_resnet.models
 import numpy
 import pkg_resources
+import pytest
 
 import deepometry.image.iterator
 import deepometry.model
+
+
+@pytest.fixture()
+def data_dir(tmpdir):
+    return tmpdir.mkdir("data")
 
 
 def test_init():
@@ -28,7 +35,7 @@ def test_compile():
     assert isinstance(model.model.optimizer, keras.optimizers.Adam)
 
 
-def test_fit(mocker):
+def test_fit(data_dir, mocker):
     numpy.random.seed(53)
 
     x = numpy.random.randint(256, size=(100, 48, 48, 3))
@@ -36,6 +43,9 @@ def test_fit(mocker):
 
     with mocker.patch("keras_resnet.models.ResNet50") as model_mock:
         keras_resnet.models.ResNet50.return_value = model_mock
+
+        resources = mocker.patch("pkg_resources.resource_filename")
+        resources.side_effect = lambda _, filename: str(data_dir.join(os.path.basename(filename)))
 
         model = deepometry.model.Model(shape=(48, 48, 3), units=4)
         model.compile()
@@ -125,3 +135,56 @@ def test_fit(mocker):
         actual = generator.image_data_generator.preprocessing_function(sample)
 
         numpy.testing.assert_array_almost_equal(actual, expected, decimal=5)
+
+
+def test_evaluate(data_dir, mocker):
+    x = numpy.random.randint(256, size=(100, 48, 48, 3)).astype(numpy.float64)
+    y = numpy.random.randint(4, size=(100,))
+
+    meanscsv = str(data_dir.join("means.csv"))
+    with open(meanscsv, "w") as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow([125.3, 127.12, 121.9])
+
+    expected_samples = x.copy()
+    expected_samples[:, :, :, 0] -= 125.3
+    expected_samples[:, :, :, 1] -= 127.12
+    expected_samples[:, :, :, 2] -= 121.9
+
+    expected_targets = keras.utils.to_categorical(y, 4)
+
+    with mocker.patch("keras_resnet.models.ResNet50") as model_mock:
+        keras_resnet.models.ResNet50.return_value = model_mock
+
+        resources = mocker.patch("pkg_resources.resource_filename")
+        resources.side_effect = lambda _, filename: str(data_dir.join(os.path.basename(filename)))
+
+        model = deepometry.model.Model(shape=(48, 48, 3), units=4)
+        model.compile()
+        model.evaluate(
+            x,
+            y,
+            batch_size=10,
+            verbose=0
+        )
+
+        model_mock.load_weights.assert_called_once_with(
+            pkg_resources.resource_filename("deepometry", os.path.join("data", "checkpoint.hdf5"))
+        )
+
+        model_mock.evaluate.assert_called_once_with(
+            x=mocker.ANY,
+            y=mocker.ANY,
+            batch_size=10,
+            verbose=0
+        )
+
+        _, kwargs = model_mock.evaluate.call_args
+
+        samples = kwargs["x"]
+        assert samples.shape == expected_samples.shape
+        numpy.testing.assert_array_equal(samples, expected_samples)
+
+        targets = kwargs["y"]
+        assert targets.shape == expected_targets.shape
+        numpy.testing.assert_array_equal(targets, expected_targets)

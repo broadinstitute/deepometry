@@ -18,7 +18,7 @@ import numpy
     "input",
     nargs=-1,
     required=True,
-    type=click.Path(exists="True")
+    type=click.Path(exists=True)
 )
 @click.option(
     "--batch-size",

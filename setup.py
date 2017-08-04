@@ -1,3 +1,5 @@
+import os.path
+
 import setuptools
 
 
@@ -17,6 +19,8 @@ setuptools.setup(
     install_requires=[
         "click",
         "javabridge",
+        "Keras",
+        "keras-resnet>=0.0.7",
         "numpy",
         "python-bioformats",
         "scipy",
@@ -32,7 +36,10 @@ setuptools.setup(
     ),
     package_data={
         "deepometry": [
-            "resources/logback.xml"
+            os.path.join("data", "checkpoint.hdf5"),
+            os.path.join("data", "means.csv"),
+            os.path.join("data", "training.csv"),
+            os.path.join("resources", "logback.xml")
         ]
     },
     url="https://github.com/broadinstitute/deepometry",

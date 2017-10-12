@@ -62,6 +62,10 @@ def test_evaluate_help(cli_runner):
 
     assert "--batch-size INTEGER" in result.output
 
+    assert "--directory PATH" in result.output
+
+    assert "--name TEXT" in result.output
+
 
 def test_evaluate(cli_runner, mocker, tmpdir):
     input1 = tmpdir.mkdir("experiment_01")
@@ -78,6 +82,8 @@ def test_evaluate(cli_runner, mocker, tmpdir):
     assert len(expected_samples) == len(expected_targets), \
         "Expected sample size ({}) and target size ({}) mismatch".format(expected_samples.shape, expected_targets.shape)
 
+    model_dir = tmpdir.mkdir("models")
+
     with mocker.patch("deepometry.model.Model") as model_mock:
         deepometry.model.Model.return_value = model_mock
 
@@ -86,6 +92,8 @@ def test_evaluate(cli_runner, mocker, tmpdir):
             [
                 "evaluate",
                 "--batch-size", "128",
+                "--directory", str(model_dir),
+                "--name", "zoolander",
                 "--verbose",
                 str(input1),
                 str(input2)

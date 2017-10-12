@@ -67,7 +67,11 @@ def test_fit_help(cli_runner):
 
     assert "--batch-size INTEGER" in result.output
 
+    assert "--directory PATH" in result.output
+
     assert "--epochs INTEGER" in result.output
+
+    assert "--name TEXT" in result.output
 
     assert "--validation-split FLOAT" in result.output
 
@@ -87,6 +91,8 @@ def test_fit(cli_runner, mocker, tmpdir):
     expected_samples = numpy.concatenate((input1_samples, input2_samples))
     expected_targets = numpy.concatenate((input1_targets, input2_targets))
 
+    model_dir = tmpdir.mkdir("models")
+
     with mocker.patch("deepometry.model.Model") as model_mock:
         numpy.random.seed(17)
 
@@ -97,7 +103,9 @@ def test_fit(cli_runner, mocker, tmpdir):
             [
                 "fit",
                 "--batch-size", "128",
+                "--directory", str(model_dir),
                 "--epochs", "512",
+                "--name", "zoolander",
                 "--validation-split", "0.5",
                 "--verbose",
                 str(input1),

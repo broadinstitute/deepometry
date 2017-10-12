@@ -3,6 +3,7 @@ import os
 
 import click
 import numpy
+import pkg_resources
 
 
 @click.command(
@@ -27,10 +28,22 @@ import numpy
     type=click.INT
 )
 @click.option(
+    "--directory",
+    default=None,
+    help="Output directory for model checkpoints, metrics, and metadata.",
+    type=click.Path(exists=True)
+)
+@click.option(
     "--epochs",
     default=128,
     help="Number of iterations over training data.",
     type=click.INT
+)
+@click.option(
+    "--name",
+    default=None,
+    help="A unique identifier for referencing this model.",
+    type=click.STRING
 )
 @click.option(
     "--validation-split",
@@ -42,7 +55,7 @@ import numpy
     "--verbose",
     is_flag=True
 )
-def command(input, batch_size, epochs, validation_split, verbose):
+def command(input, batch_size, directory, epochs, name, validation_split, verbose):
     import deepometry.model
 
     directories = [os.path.realpath(directory) for directory in input]
@@ -53,7 +66,12 @@ def command(input, batch_size, epochs, validation_split, verbose):
 
     x, y = _load(pathnames, labels)
 
-    model = deepometry.model.Model(shape=x.shape[1:], units=len(labels))
+    model = deepometry.model.Model(
+        directory=directory,
+        name=name,
+        shape=x.shape[1:],
+        units=len(labels)
+    )
 
     model.compile()
 

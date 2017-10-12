@@ -29,10 +29,22 @@ import numpy
     type=click.INT
 )
 @click.option(
+    "--directory",
+    default=None,
+    help="Output directory for model checkpoints, metrics, and metadata.",
+    type=click.Path(exists=True)
+)
+@click.option(
+    "--name",
+    default=None,
+    help="A unique identifier for referencing this model.",
+    type=click.STRING
+)
+@click.option(
     "--verbose",
     is_flag=True
 )
-def command(input, batch_size, verbose):
+def command(input, batch_size, directory, name, verbose):
     directories = [os.path.realpath(directory) for directory in input]
 
     pathnames = _collect_pathnames(directories)
@@ -41,7 +53,7 @@ def command(input, batch_size, verbose):
 
     x, y = _load(pathnames, labels)
 
-    metrics_names, metrics = _evaluate(x, y, batch_size, 1 if verbose else 0)
+    metrics_names, metrics = _evaluate(x, y, batch_size, directory, name, 1 if verbose else 0)
 
     for metric_name, metric in zip(metrics_names, metrics):
         click.echo("{metric_name}: {metric}".format(**{
@@ -61,10 +73,15 @@ def _collect_pathnames(directories):
     return sum(pathnames, [])
 
 
-def _evaluate(x, y, batch_size, verbose):
+def _evaluate(x, y, batch_size, directory, name, verbose):
     import deepometry.model
 
-    model = deepometry.model.Model(shape=x.shape[1:], units=len(numpy.unique(y)))
+    model = deepometry.model.Model(
+        directory=directory,
+        name=name,
+        shape=x.shape[1:],
+        units=len(numpy.unique(y))
+    )
 
     model.compile()
 

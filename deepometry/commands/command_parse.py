@@ -5,6 +5,7 @@ import bioformats
 import click
 import javabridge
 import pkg_resources
+import numpy
 
 import deepometry.parse
 
@@ -12,15 +13,15 @@ import deepometry.parse
 @click.command(
     "parse",
     help="""
-    Parse a directory of .CIF files.
+    Parse a directory of .CIF or .TIF files.
 
-    Convert CIF files to NPY arrays, which can be used as training, validation, or test data for a classifier.
-    Subdirectories of INPUT are class labels and subdirectory contents are CIF files containing data corresponding to
+    Convert CIF or TIF files to NPY arrays, which can be used as training, validation, or test data for a classifier.
+    Subdirectories of INPUT are class labels and subdirectory contents are .CIF or .TIF files containing data corresponding to
     that label.
 
     The OUTPUT directory will be created if it does not already exist. Subdirectories of OUTPUT are class labels
     corresponding to the subdirectories of INPUT. The contents of the subdirectories are NPY files containing parsed
-    .CIF image data.
+    .CIF or .TIF image data.
     """
 )
 @click.argument(
@@ -58,37 +59,55 @@ def command(input, output, channels, image_size, verbose):
 
     label_directories = glob.glob(os.path.join(input_directory, "*"))
 
-    parsed_channels = None if channels is None else _parse_channels(channels)
+    # Check extension
+    pathnames = glob.glob(os.path.join(label_directories[0], "*"))
+        ## TO_DO:
+        # how to make sure the label_directories[0] is not non-folder files? e.g. .DS_Store
 
-    try:
-        log_config = pkg_resources.resource_filename("deepometry", "resources/logback.xml")
+    ext = os.path.splitext(pathnames[0])[-1].lower()
+        ## TO_DO:
+        # how to make sure the pathnames[0] is not non-image files? e.g. .DS_Store
 
-        javabridge.start_vm(
-            args=[
-                "-Dlogback.configurationFile={}".format(log_config),
-                "-Dloglevel={}".format("DEBUG" if verbose else "OFF")
-            ],
-            class_path=bioformats.JARS,
-            run_headless=True
-        )
+    if ext == ".cif":
 
-        for label_directory in label_directories:
-            _, label = os.path.split(label_directory)
+        parsed_channels = None if channels is None else _parse_channels(channels)
 
-            output_label_directory = os.path.join(output_directory, label)
+        try:
+            log_config = pkg_resources.resource_filename("deepometry", "resources/logback.xml")
 
-            if not os.path.exists(output_label_directory):
-                os.mkdir(output_label_directory)
-
-            _parse_directory(
-                os.path.join(input_directory, label),
-                output_label_directory,
-                parsed_channels,
-                image_size
+            javabridge.start_vm(
+                args=[
+                    "-Dlogback.configurationFile={}".format(log_config),
+                    "-Dloglevel={}".format("DEBUG" if verbose else "OFF")
+                ],
+                class_path=bioformats.JARS,
+                max_heap_size="8G",
+                run_headless=True
             )
-    finally:
-        javabridge.kill_vm()
 
+            for label_directory in label_directories:
+                _, label = os.path.split(label_directory)
+
+                output_label_directory = os.path.join(output_directory, label)
+
+                if not os.path.exists(output_label_directory):
+                    os.mkdir(output_label_directory)
+
+                _parse_directory(
+                    os.path.join(input_directory, label),
+                    output_label_directory,
+                    parsed_channels,
+                    image_size
+                )
+        finally:
+            javabridge.kill_vm()
+
+
+    if ext == ".tif":
+        labels = [x[0] for x in os.walk(input_directory)][1:]
+        return deepometry.parse._parse_tif(input_directory, output_directory, labels, size, channels)
+
+    raise NotImplementedError("Unsupported file format: {}".format(ext))
 
 def _parse_channels(channel_str):
     groups = [group.split("-") for group in channel_str.split(",")]

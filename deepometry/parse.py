@@ -9,6 +9,10 @@ import scipy.stats
 import skimage.exposure
 import skimage.util
 
+import glob
+import re
+import skimage.io
+
 
 def parse(pathname, output_directory, size, channels=None):
     """
@@ -33,7 +37,7 @@ def parse(pathname, output_directory, size, channels=None):
     if ext == ".cif":
         return _parse_cif(pathname, output_directory, size, channels)
 
-    raise NotImplementedError("Unsupported file format: {}".format(ext))
+    raise NotImplementedError("Expected file format: {}".format(".CIF"))
 
 
 def _parse_cif(pathname, output_directory, size, channels):
@@ -52,6 +56,9 @@ def _parse_cif(pathname, output_directory, size, channels):
     for image_index in range(0, image_count, 2):
         image = reader.read(series=image_index)
 
+        if not os.path.exists(output_directory):
+            os.makedirs(output_directory)
+
         parsed_image = numpy.empty((size, size, len(channels)), dtype=numpy.uint8)
 
         for (channel_index, channel) in enumerate(channels):
@@ -59,10 +66,66 @@ def _parse_cif(pathname, output_directory, size, channels):
 
         output_pathname = os.path.join(
             output_directory,
-            "{}.npy".format(hashlib.md5(str(time.time()).encode("utf8")).hexdigest())
+            "{}__{}.npy".format(
+                os.path.basename(pathname).replace(".cif", ""),
+                hashlib.md5(str(time.time()).encode("utf8")).hexdigest())
         )
 
         numpy.save(output_pathname, parsed_image)
+
+    return True
+
+
+def _parse_tif(src, output_directory, labels, size, channels):
+
+    def channel_regex(channels):
+        return ".*" + "Ch(" + "|".join(str(channel) for channel in channels) + ")"
+
+    regex = channel_regex(channels)
+
+    nested_filenames = []
+
+    for label in labels:
+#        print("Parsing directory: {}".format(label))
+
+        src_dir = os.path.join(src, label)
+
+        filenames = glob.glob("{}/*.tif".format(src_dir))
+
+        filenames = [filename for filename in filenames if re.match(regex, os.path.basename(filename))]
+
+        nested_filenames.append(sorted(filenames))
+
+    # each list in "filenames" now behaves like a .CIF
+
+    for i in range(len(nested_filenames)):
+
+        for j in range(0, len(nested_filenames[i]), len(channels) ):
+
+            parsed_image = numpy.empty((size, size, len(channels)), dtype=numpy.uint8)
+
+            for (channel_index, channel) in enumerate(channels):
+
+                filename = nested_filenames[i][j+channel_index]
+
+                parsed_image[:, :, channel_index] = _rescale(_resize(skimage.io.imread(filename), size))
+
+            output_subdirectory = os.path.join(output_directory,
+                                               os.path.split(os.path.dirname(nested_filenames[i][j]))[-1]
+                                              )
+
+            if not os.path.exists(output_subdirectory):
+                os.makedirs(output_subdirectory)
+
+            output_pathname = os.path.join(
+                output_subdirectory,
+                "{}__{}.npy".format(
+                    os.path.basename(filename).replace(".tif", ""),
+                    hashlib.md5(str(time.time()).encode("utf8")).hexdigest()
+                )
+            )
+
+            numpy.save(output_pathname, parsed_image)
 
     return True
 

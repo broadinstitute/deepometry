@@ -102,7 +102,7 @@ class Model(object):
             "steps_per_epoch": len(x_train) // batch_size,
             "validation_steps": len(x_valid) // batch_size,
             "verbose": verbose,
-            "class_weight" : class_weight
+            "class_weight": class_weight
         }
 
         self.model.fit_generator(

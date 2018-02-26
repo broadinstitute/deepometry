@@ -86,11 +86,10 @@ def _parse_tif(src, output_directory, labels, size, channels):
     nested_filenames = []
 
     for label in labels:
-#        print("Parsing directory: {}".format(label))
 
         src_dir = os.path.join(src, label)
 
-        filenames = glob.glob("{}/*.tif".format(src_dir))
+        filenames = os.path.join(src_dir, "*.tif")
 
         filenames = [filename for filename in filenames if re.match(regex, os.path.basename(filename))]
 

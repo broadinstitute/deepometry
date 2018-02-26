@@ -59,10 +59,10 @@ import pkg_resources
     is_flag=True
 )
 @click.option(
-    "--exclusion",
+    "--exclude",
     default=None,
-    help="A comma-separated list of prefixes (string) specifying the files that needs to be helf off from the training dataset."
-         " E.g., \"'patient_A', 'patient_X'\". All numpy arrays will be collected for fitting if this flag is omitted."
+    help="A comma-separated list of prefixes (string) specifying the files that needs to be held off from the training dataset."
+         " E.g., \"'patient_A', 'patient_X'\". All files will be collected for fitting if this flag is omitted."
 )
 
 def command(input, exclusion, batch_size, directory, epochs, name, validation_split, verbose):
@@ -88,7 +88,7 @@ def command(input, exclusion, batch_size, directory, epochs, name, validation_sp
     model.fit(
         x,
         y,
-        class_weight = get_class_weights(y),
+        class_weight=get_class_weights(y),
         batch_size=batch_size,
         epochs=epochs,
         validation_split=validation_split,

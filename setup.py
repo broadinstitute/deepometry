@@ -22,9 +22,11 @@ setuptools.setup(
         "Keras==2.1.5",  # TODO: See deepometry.iterator.NumpyArrayIterator's `_get_batches_of_transformed_samples`.
         "keras-resnet>=0.0.7",
         "numpy",
+        "pandas",
         "python-bioformats",
         "scipy",
-        "scikit-image"
+        "scikit-image",
+        "scikit-learn"
     ],
     license="BSD",
     name="deepometry",

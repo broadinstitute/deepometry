@@ -45,20 +45,18 @@ import numpy
     is_flag=True
 )
 @click.option(
-    "--exclusion",
+    "--exclude",
     default=None,
-    help="A comma-separated list of prefixes (string) specifying the files that needs to be helf off the testing dataset."
-         " E.g., \"'patient_A', 'patient_X'\". All numpy arrays will be collected for testing if this flag is omitted."
+    help="A comma-separated list of prefixes (string) specifying the files that needs to be held off the testing dataset."
+         " E.g., \"'patient_A', 'patient_X'\". All files will be collected for testing if this flag is omitted."
 )
 @click.option(
-    "--nsamples",
+    "--samples",
     default=None,
     help="Number of objects to be collected per class label to pool into testing dataset."
          "This setting is useful to limit certain amount of datapoint to be displayed in unsupervised PCA/t-SNE plots."
          "All numpy arrays will be collected for testing if this flag is omitted."
 )
-
-
 def command(input, exclusion, nsamples, batch_size, directory, name, verbose):
     directories = [os.path.realpath(directory) for directory in input]
 
@@ -84,9 +82,7 @@ def _sample(directories, nsamples):
         subdirectories = sorted(glob.glob(os.path.join(directory, "*")))
 
         # transform the files of the same label into directory
-        subdirectory_pathnames = [glob.glob("{}/*.npy".format(subdirectory)) for subdirectory in subdirectories ]
-
-        nsamples = max([len(pathnames) for pathnames in subdirectory_pathnames]) if nsamples is None else nsamples = nsamples
+        subdirectory_pathnames = [glob.glob(os.path.join(subdirectory, "*.npy")) for subdirectory in subdirectories]
 
         pathnames += [list(numpy.random.permutation(pathnames)[:nsamples]) for pathnames in subdirectory_pathnames]
 
@@ -112,9 +108,8 @@ def _evaluate(x, y, batch_size, directory, name, verbose):
 
 def _load(pathnames, labels, exclusion):
 
-    print('Before exclusion: ',len(pathnames))
-    pathnames = [x for x in pathnames if exclusion not in x]
-    print('After exclusion: ',len(pathnames))
+    for ii in range(len(exclusion)):
+        pathnames = [x for x in pathnames if numpy.all([not z in x for z in exclusion[:ii]])]
 
     x = numpy.empty((len(pathnames),) + _shape(pathnames[0]), dtype=numpy.uint8)
 
@@ -123,7 +118,7 @@ def _load(pathnames, labels, exclusion):
     label_to_index = {label: index for index, label in enumerate(sorted(labels))}
 
     for index, pathname in enumerate(pathnames):
-        if os.path.isfile(pathname) == True: # in case there is a mixture of directories and files
+        if os.path.isfile(pathname): # in case there is a mixture of directories and files
 
             label = os.path.split(os.path.dirname(pathname))[-1]
 

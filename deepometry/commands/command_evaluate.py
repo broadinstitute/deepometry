@@ -108,8 +108,7 @@ def _evaluate(x, y, batch_size, directory, name, verbose):
 
 def _load(pathnames, labels, exclusion):
 
-    for ii in range(len(exclusion)):
-        pathnames = [x for x in pathnames if numpy.all([not z in x for z in exclusion[:ii]])]
+    pathnames = [x for x in pathnames if numpy.all([not z in x for z in exclusion])]
 
     x = numpy.empty((len(pathnames),) + _shape(pathnames[0]), dtype=numpy.uint8)
 

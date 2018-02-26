@@ -60,13 +60,17 @@ def command(input, output, channels, image_size, verbose):
     label_directories = glob.glob(os.path.join(input_directory, "*"))
 
     # Check extension
-    pathnames = glob.glob(os.path.join(label_directories[0], "*"))
-        ## TO_DO:
-        # how to make sure the label_directories[0] is not non-folder files? e.g. .DS_Store
+    ii = 0
+    while os.path.isdir(label_directories[i]) == False:
+        ii += 1
+    pathnames = glob.glob(os.path.join(label_directories[ii], "*"))
+    # to make sure the label_directories[0] is not non-folder files. e.g. .DS_Store
 
-    ext = os.path.splitext(pathnames[0])[-1].lower()
-        ## TO_DO:
-        # how to make sure the pathnames[0] is not non-image files? e.g. .DS_Store
+    iii = 0
+    while ".DS_Store" in pathnames[0]:
+        iii += 1
+    ext = os.path.splitext(pathnames[iii])[-1].lower()
+    # to make sure the pathnames[0] is not non-image files. e.g. .DS_Store
 
     if ext == ".cif":
 

@@ -85,7 +85,7 @@ def _export(features, metadata, directory, name):
 
     # Export label metadata, as tsv.
     resource_filename = _resource("metadata.tsv", directory=directory, name=name)
-    df = pandas.DataFrame(data=metadata, columns=["Label"])
+    df = pandas.DataFrame(data=metadata)
     df.to_csv(resource_filename, index=False, sep="\t")
     click.echo("Metadata TSV: {:s}".format(resource_filename))
 

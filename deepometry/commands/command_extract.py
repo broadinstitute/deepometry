@@ -5,16 +5,17 @@ import click
 import numpy
 import pandas
 import pkg_resources
+import skimage.io
 
 
 @click.command(
     "extract",
-    help="""
-    Extract features from a trained model.
-    
-    INPUT should be a directory or list of directories. Subdirectories of INPUT directories are class labels and
-    subdirectory contents are image data as NPY arrays.
-    """
+    help="""\
+Extract features from a trained model.
+
+INPUT should be a directory or list of directories. Subdirectories of INPUT directories are class labels and \
+subdirectory contents are image data as NPY arrays.\
+"""
 )
 @click.argument(
     "input",
@@ -41,6 +42,11 @@ import pkg_resources
     type=click.STRING
 )
 @click.option(
+    "--sprites",
+    help="Export sprites. Images must be grayscale or RGB.",
+    is_flag=True
+)
+@click.option(
     "--standardize",
     help="Center to the mean and component wise scale to unit variance.",
     is_flag=True
@@ -49,7 +55,7 @@ import pkg_resources
     "--verbose",
     is_flag=True
 )
-def command(input, batch_size, directory, name, standardize, verbose):
+def command(input, batch_size, directory, name, sprites, standardize, verbose):
     directories = [os.path.realpath(directory) for directory in input]
 
     pathnames = _collect_pathnames(directories)
@@ -62,7 +68,11 @@ def command(input, batch_size, directory, name, standardize, verbose):
 
     metadata = [labels[yi] for yi in y]
 
-    _export(features, metadata, directory, name)
+    sprite_img = None
+    if sprites:
+        sprite_img = _images_to_sprite(x)
+
+    _export(features, metadata, sprite_img, directory, name)
 
 
 def _collect_pathnames(directories):
@@ -76,7 +86,7 @@ def _collect_pathnames(directories):
     return sum(pathnames, [])
 
 
-def _export(features, metadata, directory, name):
+def _export(features, metadata, sprites, directory, name):
     # Export the features, as tsv.
     resource_filename = _resource("features.tsv", directory=directory, name=name)
     df = pandas.DataFrame(data=features)
@@ -88,6 +98,10 @@ def _export(features, metadata, directory, name):
     df = pandas.DataFrame(data=metadata)
     df.to_csv(resource_filename, index=False, sep="\t")
     click.echo("Metadata TSV: {:s}".format(resource_filename))
+
+    resource_filename = _resource("sprites.png", directory=directory, name=name)
+    skimage.io.imsave(resource_filename, sprites)
+    click.echo("Sprites PNG: {:s}".format(resource_filename))
 
 
 def _extract(x, y, batch_size, directory, name, standardize, verbose):
@@ -103,6 +117,35 @@ def _extract(x, y, batch_size, directory, name, standardize, verbose):
     model.compile()
 
     return model.extract(x, batch_size=batch_size, standardize=standardize, verbose=verbose)
+
+
+def _images_to_sprite(x):
+    """Creates the sprite image along with any necessary padding
+    Args:
+      x: NxHxW[x3] tensor containing the images.
+    Returns:
+      x: Properly shaped HxWx3 image with any necessary padding.
+    """
+    if x.ndim == 3:
+        x = numpy.tile(x[..., numpy.newaxis], (1, 1, 1, 3))
+
+    x = x.astype(numpy.float32)
+
+    x_min = numpy.min(x.reshape((x.shape[0], -1)), axis=1)
+    x = (x.transpose((1, 2, 3, 0)) - x_min).transpose((3, 0, 1, 2))
+
+    x_max = numpy.max(x.reshape((x.shape[0], -1)), axis=1)
+    x = (x.transpose((1, 2, 3, 0)) / x_max).transpose((3, 0, 1, 2))
+
+    # Tile the individual thumbnails into an image.
+    n = int(numpy.ceil(numpy.sqrt(x.shape[0])))
+    padding = ((0, n ** 2 - x.shape[0]), (0, 0), (0, 0)) + ((0, 0),) * (x.ndim - 3)
+    x = numpy.pad(x, padding, mode="constant", constant_values=0)
+    x = x.reshape((n, n) + x.shape[1:]).transpose((0, 2, 1, 3) + tuple(range(4, x.ndim + 1)))
+    x = x.reshape((n * x.shape[1], n * x.shape[3]) + x.shape[4:])
+    x = (x * 255).astype(numpy.uint8)
+
+    return x
 
 
 def _load(pathnames, labels):

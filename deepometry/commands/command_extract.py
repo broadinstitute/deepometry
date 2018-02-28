@@ -96,13 +96,13 @@ def _export(features, metadata, sprites, directory, name):
     # Export the features, as tsv.
     resource_filename = _resource("features.tsv", directory=directory, prefix=name)
     df = pandas.DataFrame(data=features)
-    df.to_csv(resource_filename, index=False, sep="\t")
+    df.to_csv(resource_filename, header=False, index=False, sep="\t")
     click.echo("Features TSV: {:s}".format(resource_filename))
 
     # Export label metadata, as tsv.
     resource_filename = _resource("metadata.tsv", directory=directory, prefix=name)
     df = pandas.DataFrame(data=metadata)
-    df.to_csv(resource_filename, index=False, sep="\t")
+    df.to_csv(resource_filename, header=False, index=False, sep="\t")
     click.echo("Metadata TSV: {:s}".format(resource_filename))
 
     resource_filename = _resource("sprites.png", directory=directory, prefix=name)

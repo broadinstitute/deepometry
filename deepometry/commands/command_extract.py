@@ -30,16 +30,22 @@ subdirectory contents are image data as NPY arrays.\
     type=click.INT
 )
 @click.option(
-    "--directory",
+    "--model-directory",
     default=None,
     help="Directory containing model checkpoints, metrics, and metadata.",
     type=click.Path(exists=True)
 )
 @click.option(
-    "--name",
+    "--model-name",
     default=None,
     help="A unique identifier for referencing this model.",
     type=click.STRING
+)
+@click.option(
+    "--output-directory",
+    default=pkg_resources.resource_filename("deepometry", "data"),
+    help="Output directory for extracted data.",
+    type=click.Path()
 )
 @click.option(
     "--sprites",
@@ -55,7 +61,7 @@ subdirectory contents are image data as NPY arrays.\
     "--verbose",
     is_flag=True
 )
-def command(input, batch_size, directory, name, sprites, standardize, verbose):
+def command(input, batch_size, model_directory, model_name, output_directory, sprites, standardize, verbose):
     directories = [os.path.realpath(directory) for directory in input]
 
     pathnames = _collect_pathnames(directories)
@@ -64,7 +70,7 @@ def command(input, batch_size, directory, name, sprites, standardize, verbose):
 
     x, y = _load(pathnames, labels)
 
-    features = _extract(x, y, batch_size, directory, name, standardize, 1 if verbose else 0)
+    features = _extract(x, y, batch_size, model_directory, model_name, standardize, 1 if verbose else 0)
 
     metadata = [labels[yi] for yi in y]
 
@@ -72,7 +78,7 @@ def command(input, batch_size, directory, name, sprites, standardize, verbose):
     if sprites:
         sprite_img = _images_to_sprite(x)
 
-    _export(features, metadata, sprite_img, directory, name)
+    _export(features, metadata, sprite_img, output_directory, model_name)
 
 
 def _collect_pathnames(directories):
@@ -88,18 +94,18 @@ def _collect_pathnames(directories):
 
 def _export(features, metadata, sprites, directory, name):
     # Export the features, as tsv.
-    resource_filename = _resource("features.tsv", directory=directory, name=name)
+    resource_filename = _resource("features.tsv", directory=directory, prefix=name)
     df = pandas.DataFrame(data=features)
     df.to_csv(resource_filename, index=False, sep="\t")
     click.echo("Features TSV: {:s}".format(resource_filename))
 
     # Export label metadata, as tsv.
-    resource_filename = _resource("metadata.tsv", directory=directory, name=name)
+    resource_filename = _resource("metadata.tsv", directory=directory, prefix=name)
     df = pandas.DataFrame(data=metadata)
     df.to_csv(resource_filename, index=False, sep="\t")
     click.echo("Metadata TSV: {:s}".format(resource_filename))
 
-    resource_filename = _resource("sprites.png", directory=directory, name=name)
+    resource_filename = _resource("sprites.png", directory=directory, prefix=name)
     skimage.io.imsave(resource_filename, sprites)
     click.echo("Sprites PNG: {:s}".format(resource_filename))
 
@@ -165,17 +171,11 @@ def _load(pathnames, labels):
     return x, y
 
 
-def _resource(filename, directory=None, name=None):
-    if name is None:
+def _resource(filename, directory, prefix=None):
+    if prefix is None:
         resource_filename = filename
     else:
-        resource_filename = "{:s}_{:s}".format(name, filename)
-
-    if directory is None:
-        return pkg_resources.resource_filename(
-            "deepometry",
-            os.path.join("data", resource_filename)
-        )
+        resource_filename = "{:s}_{:s}".format(prefix, filename)
 
     return os.path.join(directory, resource_filename)
 

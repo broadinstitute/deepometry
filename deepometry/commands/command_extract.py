@@ -1,4 +1,5 @@
-import glob
+# coding: utf-8
+
 import os
 
 import click
@@ -62,34 +63,19 @@ subdirectory contents are image data as NPY arrays.\
     is_flag=True
 )
 def command(input, batch_size, model_directory, model_name, output_directory, sprites, standardize, verbose):
+    import deepometry.utils
+
     directories = [os.path.realpath(directory) for directory in input]
 
-    pathnames = _collect_pathnames(directories)
+    x, labels, units = deepometry.utils.load(directories, convert=False)
 
-    labels = sorted(set([os.path.split(os.path.dirname(pathname))[-1] for pathname in pathnames]))
-
-    x, y = _load(pathnames, labels)
-
-    features = _extract(x, y, batch_size, model_directory, model_name, standardize, 1 if verbose else 0)
-
-    metadata = [labels[yi] for yi in y]
+    features = _extract(x, units, batch_size, model_directory, model_name, standardize, 1 if verbose else 0)
 
     sprite_img = None
     if sprites:
         sprite_img = _images_to_sprite(x)
 
-    _export(features, metadata, sprite_img, output_directory, model_name)
-
-
-def _collect_pathnames(directories):
-    pathnames = []
-
-    for directory in directories:
-        subdirectories = glob.glob(os.path.join(directory, "*"))
-
-        pathnames += [glob.glob(os.path.join(subdirectory, "*")) for subdirectory in subdirectories]
-
-    return sum(pathnames, [])
+    _export(features, labels, sprite_img, output_directory, model_name)
 
 
 def _export(features, metadata, sprites, directory, name):
@@ -111,14 +97,14 @@ def _export(features, metadata, sprites, directory, name):
         click.echo("Sprites PNG: {:s}".format(resource_filename))
 
 
-def _extract(x, y, batch_size, directory, name, standardize, verbose):
+def _extract(x, units, batch_size, directory, name, standardize, verbose):
     import deepometry.model
 
     model = deepometry.model.Model(
         directory=directory,
         name=name,
         shape=x.shape[1:],
-        units=len(numpy.unique(y))
+        units=units
     )
 
     model.compile()
@@ -155,23 +141,6 @@ def _images_to_sprite(x):
     return x
 
 
-def _load(pathnames, labels):
-    x = numpy.empty((len(pathnames),) + _shape(pathnames[0]), dtype=numpy.uint8)
-
-    y = numpy.empty((len(pathnames),), dtype=numpy.uint8)
-
-    label_to_index = {label: index for index, label in enumerate(sorted(labels))}
-
-    for index, pathname in enumerate(pathnames):
-        label = os.path.split(os.path.dirname(pathname))[-1]
-
-        x[index] = numpy.load(pathname)
-
-        y[index] = label_to_index[label]
-
-    return x, y
-
-
 def _resource(filename, directory, prefix=None):
     if prefix is None:
         resource_filename = filename
@@ -179,7 +148,3 @@ def _resource(filename, directory, prefix=None):
         resource_filename = "{:s}_{:s}".format(prefix, filename)
 
     return os.path.join(directory, resource_filename)
-
-
-def _shape(pathname):
-    return numpy.load(pathname).shape

@@ -1,8 +1,8 @@
-import glob
+# coding: utf-8
+
 import os
 
 import click
-import numpy
 
 
 @click.command(
@@ -55,21 +55,23 @@ import numpy
     is_flag=True
 )
 def command(input, batch_size, directory, epochs, name, validation_split, verbose):
-    import deepometry.model
+    import deepometry.utils
 
     directories = [os.path.realpath(directory) for directory in input]
 
-    pathnames = _sample(directories)
+    x, y, units = deepometry.utils.load(directories, sample=True)
 
-    labels = set([os.path.split(os.path.dirname(pathname))[-1] for pathname in pathnames])
+    _fit(x, y, units, batch_size, directory, epochs, name, validation_split, verbose)
 
-    x, y = _load(pathnames, labels)
+
+def _fit(x, y, units, batch_size, directory, epochs, name, validation_split, verbose):
+    import deepometry.model
 
     model = deepometry.model.Model(
         directory=directory,
         name=name,
         shape=x.shape[1:],
-        units=len(labels)
+        units=units
     )
 
     model.compile()
@@ -82,49 +84,3 @@ def command(input, batch_size, directory, epochs, name, validation_split, verbos
         validation_split=validation_split,
         verbose=1 if verbose else 0
     )
-
-
-def _filter(paths):
-    return [path for path in paths if os.path.splitext(path)[-1].lower() == ".npy"]
-
-
-def _load(pathnames, labels):
-    x = numpy.empty((len(pathnames),) + _shape(pathnames[0]), dtype=numpy.uint8)
-
-    y = numpy.empty((len(pathnames),), dtype=numpy.uint8)
-
-    label_to_index = {label: index for index, label in enumerate(sorted(labels))}
-
-    for index, pathname in enumerate(pathnames):
-        label = os.path.split(os.path.dirname(pathname))[-1]
-
-        x[index] = numpy.load(pathname)
-
-        y[index] = label_to_index[label]
-
-    return x, y
-
-
-def _sample(directories):
-    samples = []
-
-    for directory in directories:
-        # List subdirectories, filtering non-directory files
-        subdirectories = sorted([
-            directory for directory in glob.glob(os.path.join(directory, "*")) if os.path.isdir(directory)
-        ])
-
-        # Remove files that aren't NPYs
-        subdirectory_paths = [_filter(glob.glob(os.path.join(subdirectory, "*"))) for subdirectory in subdirectories]
-
-        nsamples = int(numpy.median([len(pathnames) for pathnames in subdirectory_paths]))
-
-        samples += [
-            list(numpy.random.permutation(pathnames)[:nsamples]) for pathnames in subdirectory_paths
-        ]
-
-    return sum(samples, [])
-
-
-def _shape(pathname):
-    return numpy.load(pathname).shape

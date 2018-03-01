@@ -50,10 +50,10 @@ def _collect(directories, sample=False):
 
         if sample:
             if isinstance(sample, bool):
-                sample = int(numpy.median([len(paths) for paths in subdirectory_paths]))
+                sample = int(numpy.median([len(subdir_paths) for subdir_paths in subdirectory_paths]))
 
             subdirectory_paths = [
-                list(numpy.random.permutation(paths)[:sample]) for paths in subdirectory_paths
+                list(numpy.random.permutation(subdir_paths)[:sample]) for subdir_paths in subdirectory_paths
             ]
 
         paths += subdirectory_paths

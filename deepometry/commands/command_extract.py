@@ -3,7 +3,6 @@
 import os
 
 import click
-import numpy
 import pandas
 import pkg_resources
 import skimage.io
@@ -71,11 +70,9 @@ def command(input, batch_size, model_directory, model_name, output_directory, sp
 
     features = _extract(x, units, batch_size, model_directory, model_name, standardize, 1 if verbose else 0)
 
-    sprite_img = None
-    if sprites:
-        sprite_img = _images_to_sprite(x)
+    sprites_img = _sprites(x) if sprites else None
 
-    _export(features, labels, sprite_img, output_directory, model_name)
+    _export(features, labels, sprites_img, output_directory, model_name)
 
 
 def _export(features, metadata, sprites, directory, name):
@@ -112,35 +109,6 @@ def _extract(x, units, batch_size, directory, name, standardize, verbose):
     return model.extract(x, batch_size=batch_size, standardize=standardize, verbose=verbose)
 
 
-def _images_to_sprite(x):
-    """Creates the sprite image along with any necessary padding
-    Args:
-      x: NxHxW[x3] tensor containing the images.
-    Returns:
-      x: Properly shaped HxWx3 image with any necessary padding.
-    """
-    if x.ndim == 3:
-        x = numpy.tile(x[..., numpy.newaxis], (1, 1, 1, 3))
-
-    x = x.astype(numpy.float32)
-
-    x_min = numpy.min(x.reshape((x.shape[0], -1)), axis=1)
-    x = (x.transpose((1, 2, 3, 0)) - x_min).transpose((3, 0, 1, 2))
-
-    x_max = numpy.max(x.reshape((x.shape[0], -1)), axis=1)
-    x = (x.transpose((1, 2, 3, 0)) / x_max).transpose((3, 0, 1, 2))
-
-    # Tile the individual thumbnails into an image.
-    n = int(numpy.ceil(numpy.sqrt(x.shape[0])))
-    padding = ((0, n ** 2 - x.shape[0]), (0, 0), (0, 0)) + ((0, 0),) * (x.ndim - 3)
-    x = numpy.pad(x, padding, mode="constant", constant_values=0)
-    x = x.reshape((n, n) + x.shape[1:]).transpose((0, 2, 1, 3) + tuple(range(4, x.ndim + 1)))
-    x = x.reshape((n * x.shape[1], n * x.shape[3]) + x.shape[4:])
-    x = (x * 255).astype(numpy.uint8)
-
-    return x
-
-
 def _resource(filename, directory, prefix=None):
     if prefix is None:
         resource_filename = filename
@@ -148,3 +116,9 @@ def _resource(filename, directory, prefix=None):
         resource_filename = "{:s}_{:s}".format(prefix, filename)
 
     return os.path.join(directory, resource_filename)
+
+
+def _sprites(x):
+    import deepometry.visualize
+
+    return deepometry.visualize.images_to_sprite(x)

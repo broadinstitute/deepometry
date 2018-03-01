@@ -2,10 +2,8 @@
 
 import os.path
 import subprocess
-import sys
 
 import click
-import pandas
 import pkg_resources
 
 
@@ -46,47 +44,22 @@ FEATURES should be a TSV containing the embedding.
     type=click.INT
 )
 def command(features, metadata, output_directory, sprites, sprites_dim):
-    try:
-        import tensorflow
-    except ImportError:
-        click.echo(
-            "Tensorflow is required for visualization."
-            " To install tensorflow, run `pip install tensorflow`."
-        )
-        sys.exit(127)
+    import deepometry.visualize
 
-    _validate_tsv(features)
-    features_df = pandas.read_csv(features, header=None, sep="\t")
-    features_tf = tensorflow.Variable(features_df.values, name="features")
-
-    with tensorflow.Session() as session:
-        saver = tensorflow.train.Saver([features_tf])
-        session.run(features_tf.initializer)
-        saver.save(session, os.path.join(output_directory, "embedding.ckpt"))
-
-    config = tensorflow.contrib.tensorboard.plugins.projector.ProjectorConfig()
-
-    embedding = config.embeddings.add()
-    embedding.tensor_name = features_tf.name
-
-    if metadata:
-        _validate_tsv(metadata)
-        embedding.metadata_path = metadata
-
-    if sprites:
-        embedding.sprite.image_path = sprites
-        embedding.sprite.single_image_dim.extend([sprites_dim, sprites_dim])
-
-    tensorflow.contrib.tensorboard.plugins.projector.visualize_embeddings(
-        tensorflow.summary.FileWriter(output_directory),
-        config
+    log_directory = deepometry.visualize.make_projection(
+        features,
+        metadata=metadata,
+        log_directory=output_directory,
+        sprites=sprites,
+        sprites_dim=sprites_dim
     )
 
     click.echo(
         "Starting TensorBoard...\n"
         "Please open your web browser and navigate to the address provided:"
     )
-    subprocess.call(["tensorboard", "--logdir", output_directory])
+
+    subprocess.call(["tensorboard", "--logdir", log_directory])
 
 
 def _validate_tsv(path):

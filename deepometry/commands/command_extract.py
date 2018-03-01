@@ -105,9 +105,10 @@ def _export(features, metadata, sprites, directory, name):
     df.to_csv(resource_filename, header=False, index=False, sep="\t")
     click.echo("Metadata TSV: {:s}".format(resource_filename))
 
-    resource_filename = _resource("sprites.png", directory=directory, prefix=name)
-    skimage.io.imsave(resource_filename, sprites)
-    click.echo("Sprites PNG: {:s}".format(resource_filename))
+    if sprites:
+        resource_filename = _resource("sprites.png", directory=directory, prefix=name)
+        skimage.io.imsave(resource_filename, sprites)
+        click.echo("Sprites PNG: {:s}".format(resource_filename))
 
 
 def _extract(x, y, batch_size, directory, name, standardize, verbose):

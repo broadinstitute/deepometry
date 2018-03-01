@@ -52,7 +52,7 @@ def make_projection(features, metadata=None, log_directory=None, sprites=None, s
 
     if metadata:
         _validate_tsv(metadata)
-        embedding.metadata_path = metadata
+        embedding.metadata_path = os.path.realpath(metadata)
 
     if sprites:
         if not sprites_dim:
@@ -61,7 +61,7 @@ def make_projection(features, metadata=None, log_directory=None, sprites=None, s
                 " Please supply a valid integer for `sprites_dim`."
             )
 
-        embedding.sprite.image_path = sprites
+        embedding.sprite.image_path = os.path.realpath(sprites)
         embedding.sprite.single_image_dim.extend([sprites_dim, sprites_dim])
 
     tensorflow.contrib.tensorboard.plugins.projector.visualize_embeddings(

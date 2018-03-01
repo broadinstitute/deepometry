@@ -54,7 +54,7 @@ def command(features, metadata, output_directory, sprites, sprites_dim):
         sys.exit(127)
 
     _validate_tsv(features)
-    features_df = pandas.read_csv(features, sep="\t")
+    features_df = pandas.read_csv(features, header=None, sep="\t")
     features_tf = tensorflow.Variable(features_df.values, name="features")
 
     with tensorflow.Session() as session:

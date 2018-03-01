@@ -5,7 +5,9 @@ Image classification for imaging flow cytometry.
 
     git clone https://github.com/broadinstitute/deepometry.git
     cd deepometry
-    pip install --upgrade --editable .
+    pip install --upgrade pip setuptools wheel
+    pip install --upgrade numpy
+    pip install --upgrade .
     
 ## Use
 

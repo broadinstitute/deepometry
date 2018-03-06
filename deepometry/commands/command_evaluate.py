@@ -44,14 +44,27 @@ import numpy
     "--verbose",
     is_flag=True
 )
-def command(input, batch_size, directory, name, verbose):
+@click.option(
+    "--exclude",
+    default=None,
+    help="A comma-separated list of prefixes (string) specifying the files that needs to be held off the testing dataset."
+         " E.g., \"'patient_A', 'patient_X'\". All files will be collected for testing if this flag is omitted."
+)
+@click.option(
+    "--samples",
+    default=None,
+    help="Number of objects to be collected per class label to pool into testing dataset."
+         "This setting is useful to limit certain amount of datapoint to be displayed in unsupervised PCA/t-SNE plots."
+         "All numpy arrays will be collected for testing if this flag is omitted."
+)
+def command(input, exclusion, nsamples, batch_size, directory, name, verbose):
     directories = [os.path.realpath(directory) for directory in input]
 
-    pathnames = _collect_pathnames(directories)
+    pathnames = _sample(directories, nsamples)
 
     labels = set([os.path.split(os.path.dirname(pathname))[-1] for pathname in pathnames])
 
-    x, y = _load(pathnames, labels)
+    x, y = _load(pathnames, labels, exclusion)
 
     metrics_names, metrics = _evaluate(x, y, batch_size, directory, name, 1 if verbose else 0)
 
@@ -62,13 +75,16 @@ def command(input, batch_size, directory, name, verbose):
         }))
 
 
-def _collect_pathnames(directories):
+def _sample(directories, nsamples):
     pathnames = []
 
     for directory in directories:
-        subdirectories = glob.glob(os.path.join(directory, "*"))
+        subdirectories = sorted(glob.glob(os.path.join(directory, "*")))
 
-        pathnames += [glob.glob(os.path.join(subdirectory, "*")) for subdirectory in subdirectories]
+        # transform the files of the same label into directory
+        subdirectory_pathnames = [glob.glob(os.path.join(subdirectory, "*.npy")) for subdirectory in subdirectories]
+
+        pathnames += [list(numpy.random.permutation(pathnames)[:nsamples]) for pathnames in subdirectory_pathnames]
 
     return sum(pathnames, [])
 
@@ -90,7 +106,10 @@ def _evaluate(x, y, batch_size, directory, name, verbose):
     return model.model.metrics_names, metrics
 
 
-def _load(pathnames, labels):
+def _load(pathnames, labels, exclusion):
+
+    pathnames = [x for x in pathnames if numpy.all([not z in x for z in exclusion])]
+
     x = numpy.empty((len(pathnames),) + _shape(pathnames[0]), dtype=numpy.uint8)
 
     y = numpy.empty((len(pathnames),), dtype=numpy.uint8)
@@ -98,11 +117,13 @@ def _load(pathnames, labels):
     label_to_index = {label: index for index, label in enumerate(sorted(labels))}
 
     for index, pathname in enumerate(pathnames):
-        label = os.path.split(os.path.dirname(pathname))[-1]
+        if os.path.isfile(pathname): # in case there is a mixture of directories and files
 
-        x[index] = numpy.load(pathname)
+            label = os.path.split(os.path.dirname(pathname))[-1]
 
-        y[index] = label_to_index[label]
+            x[index] = numpy.load(pathname)
+
+            y[index] = label_to_index[label]
 
     return x, y
 

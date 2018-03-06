@@ -1,5 +1,8 @@
 import glob
 import os
+import itertools
+import re
+from collections import Counter
 
 import click
 import numpy
@@ -55,7 +58,14 @@ import pkg_resources
     "--verbose",
     is_flag=True
 )
-def command(input, batch_size, directory, epochs, name, validation_split, verbose):
+@click.option(
+    "--exclude",
+    default=None,
+    help="A comma-separated list of prefixes (string) specifying the files that needs to be held off from the training dataset."
+         " E.g., \"'patient_A', 'patient_X'\". All files will be collected for fitting if this flag is omitted."
+)
+
+def command(input, exclusion, batch_size, directory, epochs, name, validation_split, verbose):
     import deepometry.model
 
     directories = [os.path.realpath(directory) for directory in input]
@@ -64,7 +74,7 @@ def command(input, batch_size, directory, epochs, name, validation_split, verbos
 
     labels = set([os.path.split(os.path.dirname(pathname))[-1] for pathname in pathnames])
 
-    x, y = _load(pathnames, labels)
+    x, y = _load(pathnames, labels, exclusion=exclusion)
 
     model = deepometry.model.Model(
         directory=directory,
@@ -78,6 +88,7 @@ def command(input, batch_size, directory, epochs, name, validation_split, verbos
     model.fit(
         x,
         y,
+        class_weight=get_class_weights(y),
         batch_size=batch_size,
         epochs=epochs,
         validation_split=validation_split,
@@ -85,7 +96,12 @@ def command(input, batch_size, directory, epochs, name, validation_split, verbos
     )
 
 
-def _load(pathnames, labels):
+def _load(pathnames, labels, exclusion):
+
+    print('Before exclusion: ',len(pathnames))
+    pathnames = [x for x in pathnames if exclusion not in x]
+    print('After exclusion: ',len(pathnames))
+
     x = numpy.empty((len(pathnames),) + _shape(pathnames[0]), dtype=numpy.uint8)
 
     y = numpy.empty((len(pathnames),), dtype=numpy.uint8)
@@ -93,11 +109,13 @@ def _load(pathnames, labels):
     label_to_index = {label: index for index, label in enumerate(sorted(labels))}
 
     for index, pathname in enumerate(pathnames):
-        label = os.path.split(os.path.dirname(pathname))[-1]
+        if os.path.isfile(pathname) == True: # in case there is a mixture of directories and files
 
-        x[index] = numpy.load(pathname)
+            label = os.path.split(os.path.dirname(pathname))[-1]
 
-        y[index] = label_to_index[label]
+            x[index] = numpy.load(pathname)
+
+            y[index] = label_to_index[label]
 
     return x, y
 
@@ -110,7 +128,7 @@ def _sample(directories):
 
         subdirectory_pathnames = [glob.glob(os.path.join(subdirectory, "*")) for subdirectory in subdirectories]
 
-        nsamples = min([len(pathnames) for pathnames in subdirectory_pathnames])
+        nsamples = int(numpy.median([len(pathnames) for pathnames in subdirectory_pathnames]))
 
         sampled_pathnames += [
             list(numpy.random.permutation(pathnames)[:nsamples]) for pathnames in subdirectory_pathnames
@@ -121,3 +139,9 @@ def _sample(directories):
 
 def _shape(pathname):
     return numpy.load(pathname).shape
+
+
+def get_class_weights(y):
+    counter = Counter(y)
+    majority = max(counter.values())
+    return  {cls: float(majority/count) for cls, count in counter.items()}

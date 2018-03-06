@@ -34,7 +34,7 @@ class Model(object):
 
         self.model = keras_resnet.models.ResNet50(x, classes=units)
 
-    def compile(self):
+    def compile(self, lr=0.00001):
         """
         Configure the model.
         """
@@ -43,7 +43,7 @@ class Model(object):
             metrics=[
                 "accuracy"
             ],
-            optimizer="adam"
+            optimizer=keras.optimizers.Adam(lr=lr)
         )
 
     def evaluate(self, x, y, batch_size=32, verbose=0):
@@ -67,7 +67,7 @@ class Model(object):
             verbose=verbose
         )
 
-    def fit(self, x, y, batch_size=32, epochs=512, validation_split=0.2, verbose=0):
+    def fit(self, x, y, class_weight, batch_size=32, epochs=512, validation_split=0.2, verbose=0):
         """
         Train the model for a fixed number of epochs (iterations on a dataset). Training will automatically stop
         if the validation loss fails to improve for 20 epochs.
@@ -92,7 +92,7 @@ class Model(object):
                 keras.callbacks.CSVLogger(
                     self._resource("training.csv")
                 ),
-                keras.callbacks.EarlyStopping(patience=20),
+                keras.callbacks.EarlyStopping(patience=50),
                 keras.callbacks.ModelCheckpoint(
                     self._resource("checkpoint.hdf5")
                 ),
@@ -101,7 +101,8 @@ class Model(object):
             "epochs": epochs,
             "steps_per_epoch": len(x_train) // batch_size,
             "validation_steps": len(x_valid) // batch_size,
-            "verbose": verbose
+            "verbose": verbose,
+            "class_weight": class_weight
         }
 
         self.model.fit_generator(

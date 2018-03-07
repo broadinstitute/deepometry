@@ -3,7 +3,6 @@ import os.path
 
 import bioformats
 import click
-import javabridge
 import pkg_resources
 
 import deepometry.parse
@@ -11,12 +10,11 @@ import deepometry.parse
 
 @click.command(
     "parse",
-    help="""
-    Parse a directory of .CIF or .TIF files.
+    help="""Parse a directory of .CIF or .TIF files.
 
     Convert CIF or TIF files to NPY arrays, which can be used as training, validation, or test data for a classifier.
-    Subdirectories of INPUT are class labels and subdirectory contents are .CIF or .TIF files containing data corresponding to
-    that label.
+    Subdirectories of INPUT are class labels and subdirectory contents are .CIF or .TIF files containing data 
+    corresponding to that label.
 
     The OUTPUT directory will be created if it does not already exist. Subdirectories of OUTPUT are class labels
     corresponding to the subdirectories of INPUT. The contents of the subdirectories are NPY files containing parsed
@@ -73,6 +71,8 @@ def command(input, output, channels, image_size, verbose):
         ext = os.path.splitext(paths[0])[-1].lower()
 
         if ext == ".cif" and not jvm_started:
+            import javabridge
+
             _start_jvm(verbose)
             jvm_started = True
 

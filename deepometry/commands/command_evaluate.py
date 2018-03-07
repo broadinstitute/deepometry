@@ -13,8 +13,7 @@ import numpy
     INPUT should be a directory or list of directories. Subdirectories of INPUT directories are class labels and
     subdirectory contents are image data as NPY arrays.
 
-    Computation is done in batches.
-    """
+    Computation is done in batches."""
 )
 @click.argument(
     "input",
@@ -37,7 +36,7 @@ import numpy
 @click.option(
     "--exclude",
     default=None,
-    help="A comma-separated list of prefixes of files to withhold from the testing dataset."
+    help="A comma-separated list of prefixes of files to withhold from the testing data set."
          " E.g., \"patient_A, patient_X\". All files will be collected for testing if this flag is omitted."
 )
 @click.option(
@@ -49,9 +48,9 @@ import numpy
 @click.option(
     "--samples",
     default=None,
-    help="Number of objects to be collected per class label to pool into testing dataset."
-         "This setting is useful to limit certain amount of datapoint to be displayed in unsupervised PCA/t-SNE plots."
-         "All numpy arrays will be collected for testing if this flag is omitted.",
+    help="Number of objects to be collected per class label to pool into testing data set."
+         " This setting is useful to limit the number of data points displayed in unsupervised PCA/t-SNE plots."
+         " All data will be collected for testing if this flag is omitted.",
     type=click.INT
 )
 @click.option(

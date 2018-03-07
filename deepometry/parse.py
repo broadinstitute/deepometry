@@ -1,5 +1,7 @@
+import collections
 import hashlib
 import os.path
+import re
 import time
 
 import bioformats.formatreader
@@ -7,41 +9,44 @@ import javabridge
 import numpy
 import scipy.stats
 import skimage.exposure
+import skimage.io
 import skimage.util
 
-import glob
-import re
-import skimage.io
+SUPPORTED_FORMATS = [".cif", ".tif", ".tiff"]
 
 
-def parse(pathname, output_directory, size, channels=None):
-    """
-    Convert an .CIF image file to a NumPy array. The javabridge JVM is required:
-
-        import bioformats
-        import deepometry.parse
-        import javabridge
-
-
-        javabridge.start_vm(class_path=bioformats.JARS)
-
-        images = deepometry.parse.parse("cells.cif", 48, [0, 5, 6])
-
-    :param pathname: Image pathname.
-    :param output_directory: Location where parsed images are saved.
-    :param size: Final image dimensions (size, size, channels).
-    :param channels: Image channels to extract.
-    """
-    ext = os.path.splitext(pathname)[-1].lower()
+def parse(paths, output_directory, size, channels=None):
+    ext = os.path.splitext(paths[0])[-1].lower()
 
     if ext == ".cif":
-        return _parse_cif(pathname, output_directory, size, channels)
+        for path in paths:
+            _parse_cif(path, output_directory, size, channels)
 
-    raise NotImplementedError("Expected file format: {}".format(".CIF"))
+    if ext in (".tif", ".tiff"):
+        _parse_tif(paths, output_directory, size, channels)
 
 
-def _parse_cif(pathname, output_directory, size, channels):
-    reader = bioformats.formatreader.get_image_reader("tmp", path=pathname)
+def _group(paths, channels):
+    pattern = "(.*)Ch"
+
+    if channels:
+        pattern += "[{:s}]".format("|".join([str(channel) for channel in channels]))
+
+    groups = collections.defaultdict(list)
+
+    for path in paths:
+        md = re.match(pattern, path)
+
+        if md:
+            group = os.path.splitext(os.path.basename(md.group(1)))[0]
+
+            groups[group].append(path)
+
+    return groups
+
+
+def _parse_cif(path, output_directory, size, channels):
+    reader = bioformats.formatreader.get_image_reader("tmp", path=path)
 
     image_count = javabridge.call(reader.metadata, "getImageCount", "()I")
 
@@ -66,8 +71,8 @@ def _parse_cif(pathname, output_directory, size, channels):
 
         output_pathname = os.path.join(
             output_directory,
-            "{}__{}.npy".format(
-                os.path.basename(pathname).replace(".cif", ""),
+            "{:s}__{:s}.npy".format(
+                os.path.basename(path).replace(".cif", ""),
                 hashlib.md5(str(time.time()).encode("utf8")).hexdigest())
         )
 
@@ -76,57 +81,26 @@ def _parse_cif(pathname, output_directory, size, channels):
     return True
 
 
-def _parse_tif(src, output_directory, labels, size, channels):
+def _parse_tif(paths, output_directory, size, channels):
+    groups = _group(paths, channels)
 
-    def channel_regex(channels):
-        return ".*" + "Ch(" + "|".join(str(channel) for channel in channels) + ")"
+    for group, group_paths in groups.items():
+        parsed_image = numpy.empty((size, size, len(group_paths)), dtype=numpy.uint8)
 
-    regex = channel_regex(channels)
+        for index, path in enumerate(group_paths):
+            data = skimage.io.imread(path)
 
-    nested_filenames = []
+            parsed_image[:, :, index] = _rescale(_resize(data, size))
 
-    for label in labels:
-
-        src_dir = os.path.join(src, label)
-
-        filenames = os.path.join(src_dir, "*.tif")
-
-        filenames = [filename for filename in filenames if re.match(regex, os.path.basename(filename))]
-
-        nested_filenames.append(sorted(filenames))
-
-    # each list in "filenames" now behaves like a .CIF
-
-    for i in range(len(nested_filenames)):
-
-        for j in range(0, len(nested_filenames[i]), len(channels) ):
-
-            parsed_image = numpy.empty((size, size, len(channels)), dtype=numpy.uint8)
-
-            for (channel_index, channel) in enumerate(channels):
-
-                filename = nested_filenames[i][j+channel_index]
-
-                parsed_image[:, :, channel_index] = _rescale(_resize(skimage.io.imread(filename), size))
-
-            output_subdirectory = os.path.join(output_directory,
-                                               os.path.split(os.path.dirname(nested_filenames[i][j]))[-1]
-                                              )
-
-            if not os.path.exists(output_subdirectory):
-                os.makedirs(output_subdirectory)
-
-            output_pathname = os.path.join(
-                output_subdirectory,
-                "{}__{}.npy".format(
-                    os.path.basename(filename).replace(".tif", ""),
-                    hashlib.md5(str(time.time()).encode("utf8")).hexdigest()
-                )
+        output_pathname = os.path.join(
+            output_directory,
+            "{:s}__{:s}.npy".format(
+                group,
+                hashlib.md5(str(time.time()).encode("utf8")).hexdigest()
             )
+        )
 
-            numpy.save(output_pathname, parsed_image)
-
-    return True
+        numpy.save(output_pathname, parsed_image)
 
 
 def _rescale(image):

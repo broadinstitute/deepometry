@@ -5,7 +5,6 @@ import bioformats
 import click
 import javabridge
 import pkg_resources
-import numpy
 
 import deepometry.parse
 
@@ -57,61 +56,53 @@ def command(input, output, channels, image_size, verbose):
     if not os.path.exists(output_directory):
         os.mkdir(output_directory)
 
-    label_directories = glob.glob(os.path.join(input_directory, "*"))
+    # Collect subdirectories.
+    subdirectories = [
+        directory for directory in glob.glob(os.path.join(input_directory, "*")) if os.path.isdir(directory)
+    ]
 
-    # Check extension
-    ii = 0
-    while os.path.isdir(label_directories[i]) == False:
-        ii += 1
-    pathnames = glob.glob(os.path.join(label_directories[ii], "*"))
-    # to make sure the label_directories[0] is not non-folder files. e.g. .DS_Store
+    # Collect channels to parse.
+    if channels:
+        channels = _parse_channels(channels)
 
-    iii = 0
-    while ".DS_Store" in pathnames[0]:
-        iii += 1
-    ext = os.path.splitext(pathnames[iii])[-1].lower()
-    # to make sure the pathnames[0] is not non-image files. e.g. .DS_Store
+    jvm_started = False
 
-    if ext == ".cif":
+    for subdirectory in subdirectories:
+        # Collect images in subdirectory, filtering out unsupported image formats.
+        paths = _collect(subdirectory)
+        ext = os.path.splitext(paths[0])[-1].lower()
 
-        parsed_channels = None if channels is None else _parse_channels(channels)
+        if ext == ".cif" and not jvm_started:
+            _start_jvm(verbose)
+            jvm_started = True
+
+        label = os.path.split(subdirectory)[-1]
+        label_directory = os.path.join(output_directory, label)
 
         try:
-            log_config = pkg_resources.resource_filename("deepometry", "resources/logback.xml")
-
-            javabridge.start_vm(
-                args=[
-                    "-Dlogback.configurationFile={}".format(log_config),
-                    "-Dloglevel={}".format("DEBUG" if verbose else "OFF")
-                ],
-                class_path=bioformats.JARS,
-                max_heap_size="8G",
-                run_headless=True
+            deepometry.parse.parse(
+                paths,
+                output_directory=label_directory,
+                size=image_size,
+                channels=channels
             )
+        except Exception as exception:
+            if jvm_started:
+                javabridge.kill_vm()
 
-            for label_directory in label_directories:
-                _, label = os.path.split(label_directory)
+            raise exception
 
-                output_label_directory = os.path.join(output_directory, label)
-
-                if not os.path.exists(output_label_directory):
-                    os.mkdir(output_label_directory)
-
-                _parse_directory(
-                    os.path.join(input_directory, label),
-                    output_label_directory,
-                    parsed_channels,
-                    image_size
-                )
-        finally:
-            javabridge.kill_vm()
+    if jvm_started:
+        javabridge.kill_vm()
 
 
-    if ext == ".tif":
-        labels = [x[0] for x in os.walk(input_directory)][1:]
-        return deepometry.parse._parse_tif(input_directory, output_directory, labels, size, channels)
+def _collect(directory):
+    def is_image_file(path):
+        ext = os.path.splitext(path)[-1].lower()
+        return ext in deepometry.parse.SUPPORTED_FORMATS
 
-    raise NotImplementedError("Unsupported file format: {}".format(ext))
+    return [path for path in glob.glob(os.path.join(directory, "*")) if is_image_file(path)]
+
 
 def _parse_channels(channel_str):
     groups = [group.split("-") for group in channel_str.split(",")]
@@ -123,12 +114,17 @@ def _parse_channels(channel_str):
     return sum(channels, [])
 
 
-def _parse_directory(input, output, channels, image_size):
-    pathnames = glob.glob(os.path.join(input, "*.cif"))
+def _start_jvm(verbose):
+    log_config = pkg_resources.resource_filename("deepometry", "resources/logback.xml")
 
-    for pathname in pathnames:
-        filename = os.path.basename(pathname)
+    javabridge.start_vm(
+        args=[
+            "-Dlogback.configurationFile={}".format(log_config),
+            "-Dloglevel={}".format("DEBUG" if verbose else "OFF")
+        ],
+        class_path=bioformats.JARS,
+        max_heap_size="8G",
+        run_headless=True
+    )
 
-        name, _ = os.path.splitext(filename)
-
-        deepometry.parse.parse(pathname, output, image_size, channels=channels)
+    return True

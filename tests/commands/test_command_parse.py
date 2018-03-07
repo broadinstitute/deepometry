@@ -78,6 +78,7 @@ def test_parse_default(filenames, input_directory, labels, mocker, output_direct
             "-Dloglevel=OFF"
         ],
         class_path=bioformats.JARS,
+        max_heap_size="8G",
         run_headless=True
     )
 
@@ -85,15 +86,14 @@ def test_parse_default(filenames, input_directory, labels, mocker, output_direct
     expected_calls = []
 
     for label in labels:
-        for filename in filenames:
-            expected_calls.append(
-                mocker.call(
-                    os.path.join(str(input_directory), label, filename),
-                    os.path.join(str(output_directory), label),
-                    48,
-                    channels=None
-                )
+        expected_calls.append(
+            mocker.call(
+                [os.path.join(str(input_directory), label, filename) for filename in filenames],
+                output_directory=os.path.join(str(output_directory), label),
+                size=48,
+                channels=None
             )
+        )
 
     assert parser.call_args_list == expected_calls
 
@@ -129,6 +129,7 @@ def test_parse_with_image_size(filenames, input_directory, labels, mocker, outpu
             "-Dloglevel=OFF"
         ],
         class_path=bioformats.JARS,
+        max_heap_size="8G",
         run_headless=True
     )
 
@@ -136,15 +137,14 @@ def test_parse_with_image_size(filenames, input_directory, labels, mocker, outpu
     expected_calls = []
 
     for label in labels:
-        for filename in filenames:
-            expected_calls.append(
-                mocker.call(
-                    os.path.join(str(input_directory), label, filename),
-                    os.path.join(str(output_directory), label),
-                    56,
-                    channels=None
-                )
+        expected_calls.append(
+            mocker.call(
+                [os.path.join(str(input_directory), label, filename) for filename in filenames],
+                output_directory=os.path.join(str(output_directory), label),
+                size=56,
+                channels=None
             )
+        )
 
     assert parser.call_args_list == expected_calls
 
@@ -180,6 +180,7 @@ def test_parse_with_channels(filenames, input_directory, labels, mocker, output_
             "-Dloglevel=OFF"
         ],
         class_path=bioformats.JARS,
+        max_heap_size="8G",
         run_headless=True
     )
 
@@ -189,15 +190,14 @@ def test_parse_with_channels(filenames, input_directory, labels, mocker, output_
     expected_channels = [0, 3, 4, 5, 6, 7, 9]
 
     for label in labels:
-        for filename in filenames:
-            expected_calls.append(
-                mocker.call(
-                    os.path.join(str(input_directory), label, filename),
-                    os.path.join(str(output_directory), label),
-                    48,
-                    channels=expected_channels
-                )
+        expected_calls.append(
+            mocker.call(
+                [os.path.join(str(input_directory), label, filename) for filename in filenames],
+                output_directory=os.path.join(str(output_directory), label),
+                size=48,
+                channels=expected_channels
             )
+        )
 
     assert parser.call_args_list == expected_calls
 
@@ -233,6 +233,7 @@ def test_parse_verbose(filenames, input_directory, labels, mocker, output_direct
             "-Dloglevel=DEBUG"
         ],
         class_path=bioformats.JARS,
+        max_heap_size="8G",
         run_headless=True
     )
 
@@ -240,15 +241,14 @@ def test_parse_verbose(filenames, input_directory, labels, mocker, output_direct
     expected_calls = []
 
     for label in labels:
-        for filename in filenames:
-            expected_calls.append(
-                mocker.call(
-                    os.path.join(str(input_directory), label, filename),
-                    os.path.join(str(output_directory), label),
-                    48,
-                    channels=None
-                )
+        expected_calls.append(
+            mocker.call(
+                [os.path.join(str(input_directory), label, filename) for filename in filenames],
+                output_directory=os.path.join(str(output_directory), label),
+                size=48,
+                channels=None
             )
+        )
 
     assert parser.call_args_list == expected_calls
 

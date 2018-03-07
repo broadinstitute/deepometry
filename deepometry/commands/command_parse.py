@@ -73,7 +73,18 @@ def command(input, output, channels, image_size, verbose):
         if ext == ".cif" and not jvm_started:
             import javabridge
 
-            _start_jvm(verbose)
+            log_config = pkg_resources.resource_filename("deepometry", "resources/logback.xml")
+
+            javabridge.start_vm(
+                args=[
+                    "-Dlogback.configurationFile={}".format(log_config),
+                    "-Dloglevel={}".format("DEBUG" if verbose else "OFF")
+                ],
+                class_path=bioformats.JARS,
+                max_heap_size="8G",
+                run_headless=True
+            )
+
             jvm_started = True
 
         label = os.path.split(subdirectory)[-1]
@@ -112,19 +123,3 @@ def _parse_channels(channel_str):
     ]
 
     return sum(channels, [])
-
-
-def _start_jvm(verbose):
-    log_config = pkg_resources.resource_filename("deepometry", "resources/logback.xml")
-
-    javabridge.start_vm(
-        args=[
-            "-Dlogback.configurationFile={}".format(log_config),
-            "-Dloglevel={}".format("DEBUG" if verbose else "OFF")
-        ],
-        class_path=bioformats.JARS,
-        max_heap_size="8G",
-        run_headless=True
-    )
-
-    return True

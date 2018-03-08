@@ -34,12 +34,6 @@ import numpy
     type=click.Path(exists=True)
 )
 @click.option(
-    "--exclude",
-    default=None,
-    help="A comma-separated list of prefixes of files to withhold from the testing data set."
-         " E.g., \"patient_A, patient_X\". All files will be collected for testing if this flag is omitted."
-)
-@click.option(
     "--name",
     default=None,
     help="A unique identifier for referencing this model.",
@@ -57,14 +51,14 @@ import numpy
     "--verbose",
     is_flag=True
 )
-def command(input, batch_size, directory, exclude, name, samples, verbose):
+def command(input, batch_size, directory, name, samples, verbose):
     directories = [os.path.realpath(directory) for directory in input]
 
     pathnames = _sample(directories, samples)
 
     labels = set([os.path.split(os.path.dirname(pathname))[-1] for pathname in pathnames])
 
-    x, y = _load(pathnames, labels, exclude)
+    x, y = _load(pathnames, labels)
 
     metrics_names, metrics = _evaluate(x, y, batch_size, directory, name, 1 if verbose else 0)
 
@@ -96,10 +90,7 @@ def _filter(paths):
     return [path for path in paths if os.path.splitext(path)[-1].lower() == ".npy"]
 
 
-def _load(pathnames, labels, exclude):
-    if exclude:
-        pathnames = [x for x in pathnames if numpy.all([not z in x for z in exclude])]
-
+def _load(pathnames, labels):
     x = numpy.empty((len(pathnames),) + _shape(pathnames[0]), dtype=numpy.uint8)
 
     y = numpy.empty((len(pathnames),), dtype=numpy.uint8)

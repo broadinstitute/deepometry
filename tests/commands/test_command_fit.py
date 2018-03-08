@@ -71,8 +71,6 @@ def test_fit_help(cli_runner):
 
     assert "--epochs INTEGER" in result.output
 
-    assert "--exclude TEXT" in result.output
-
     assert "--name TEXT" in result.output
 
     assert "--validation-split FLOAT" in result.output

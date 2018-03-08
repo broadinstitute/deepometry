@@ -39,12 +39,6 @@ import numpy
     type=click.INT
 )
 @click.option(
-    "--exclude",
-    default=None,
-    help="A comma-separated list of prefixes of files to withhold from the training dataset."
-         " E.g., \"patient_A, patient_X\". All files will be collected for fitting if this flag is omitted."
-)
-@click.option(
     "--name",
     default=None,
     help="A unique identifier for referencing this model.",
@@ -60,7 +54,7 @@ import numpy
     "--verbose",
     is_flag=True
 )
-def command(input, batch_size, directory, epochs, exclude, name, validation_split, verbose):
+def command(input, batch_size, directory, epochs, name, validation_split, verbose):
     import deepometry.model
 
     directories = [os.path.realpath(directory) for directory in input]
@@ -69,7 +63,7 @@ def command(input, batch_size, directory, epochs, exclude, name, validation_spli
 
     labels = set([os.path.split(os.path.dirname(pathname))[-1] for pathname in pathnames])
 
-    x, y = _load(pathnames, labels, exclude=exclude)
+    x, y = _load(pathnames, labels)
 
     model = deepometry.model.Model(
         directory=directory,
@@ -94,10 +88,7 @@ def _filter(paths):
     return [path for path in paths if os.path.splitext(path)[-1].lower() == ".npy"]
 
 
-def _load(pathnames, labels, exclude=None):
-    if exclude:
-        pathnames = [x for x in pathnames if exclude not in x]
-
+def _load(pathnames, labels):
     x = numpy.empty((len(pathnames),) + _shape(pathnames[0]), dtype=numpy.uint8)
 
     y = numpy.empty((len(pathnames),), dtype=numpy.uint8)

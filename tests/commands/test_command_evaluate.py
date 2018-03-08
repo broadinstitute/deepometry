@@ -68,8 +68,6 @@ def test_evaluate_help(cli_runner):
 
     assert "--directory PATH" in result.output
 
-    assert "--exclude TEXT" in result.output
-
     assert "--name TEXT" in result.output
 
     assert "--samples INTEGER" in result.output

@@ -1,3 +1,4 @@
+import collections
 import csv
 import os.path
 
@@ -34,7 +35,7 @@ class Model(object):
 
         self.model = keras_resnet.models.ResNet50(x, classes=units)
 
-    def compile(self):
+    def compile(self, lr=0.00001):
         """
         Configure the model.
         """
@@ -43,7 +44,7 @@ class Model(object):
             metrics=[
                 "accuracy"
             ],
-            optimizer="adam"
+            optimizer=keras.optimizers.Adam(lr=lr)
         )
 
     def evaluate(self, x, y, batch_size=32, verbose=0):
@@ -67,7 +68,7 @@ class Model(object):
             verbose=verbose
         )
 
-    def fit(self, x, y, batch_size=32, epochs=512, validation_split=0.2, verbose=0):
+    def fit(self, x, y, batch_size=32, class_weight="auto", epochs=512, validation_split=0.2, verbose=0):
         """
         Train the model for a fixed number of epochs (iterations on a dataset). Training will automatically stop
         if the validation loss fails to improve for 20 epochs.
@@ -75,6 +76,8 @@ class Model(object):
         :param x: NumPy array of training data.
         :param y: NumPy array of target data.
         :param batch_size: Number of samples per gradient update.
+        :param class_weight: Dictionary mapping labels to weights. Use `"auto"` to automatically compute weights.
+            Use `None` to ignore weights.
         :param epochs: Number of times to iterate over the training data arrays.
         :param validation_split: Fraction of the training data to be used as validation data.
         :param verbose: Verbosity mode. 0 = silent, 1 = verbose, 2 = one log line per epoch.
@@ -92,12 +95,13 @@ class Model(object):
                 keras.callbacks.CSVLogger(
                     self._resource("training.csv")
                 ),
-                keras.callbacks.EarlyStopping(patience=20),
+                keras.callbacks.EarlyStopping(patience=50),
                 keras.callbacks.ModelCheckpoint(
                     self._resource("checkpoint.hdf5")
                 ),
                 keras.callbacks.ReduceLROnPlateau()
             ],
+            "class_weight": _class_weights(y) if class_weight == "auto" else class_weight,
             "epochs": epochs,
             "steps_per_epoch": len(x_train) // batch_size,
             "validation_steps": len(x_valid) // batch_size,
@@ -194,6 +198,14 @@ class Model(object):
             )
 
         return os.path.join(self.directory, resource_filename)
+
+
+def _class_weights(y):
+    counter = collections.Counter(y)
+
+    majority = max(counter.values())
+
+    return {cls: float(majority / count) for cls, count in counter.items()}
 
 
 def _split(x, y, validation_split=0.2):

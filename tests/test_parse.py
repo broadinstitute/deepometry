@@ -27,7 +27,7 @@ def test_parse_larger_image(mocker, tmpdir):
 
     output_directory = tmpdir.mkdir("output")
 
-    deepometry.parse.parse("cells.cif", str(output_directory), 32, channels=[0])
+    deepometry.parse.parse(["cells.cif"], str(output_directory), 32, channels=[0])
 
     bioformats.formatreader.get_image_reader.assert_called_with("tmp", path="cells.cif")
 
@@ -57,7 +57,7 @@ def test_parse_smaller_image(mocker, tmpdir):
 
     output_directory = tmpdir.mkdir("output")
 
-    deepometry.parse.parse("cells.cif", str(output_directory), 32, channels=[0])
+    deepometry.parse.parse(["cells.cif"], str(output_directory), 32, channels=[0])
 
     bioformats.formatreader.get_image_reader.assert_called_with("tmp", path="cells.cif")
 
@@ -70,6 +70,7 @@ def test_parse_smaller_image(mocker, tmpdir):
     assert image.shape == (32, 32, 1)
 
     assert image.dtype == numpy.uint8
+
 
 def test_parse_larger_smaller_image(mocker, tmpdir):
     mocker.patch("bioformats.formatreader.get_image_reader")
@@ -86,7 +87,7 @@ def test_parse_larger_smaller_image(mocker, tmpdir):
 
     output_directory = tmpdir.mkdir("output")
 
-    deepometry.parse.parse("cells.cif", str(output_directory), 32, channels=[0])
+    deepometry.parse.parse(["cells.cif"], str(output_directory), 32, channels=[0])
 
     bioformats.formatreader.get_image_reader.assert_called_with("tmp", path="cells.cif")
 
@@ -118,7 +119,7 @@ def test_parse_channels(mocker, tmpdir):
 
     output_directory = tmpdir.mkdir("output")
 
-    deepometry.parse.parse("cells.cif", str(output_directory), 48, channels=[0, 3, 4])
+    deepometry.parse.parse(["cells.cif"], str(output_directory), 48, channels=[0, 3, 4])
 
     bioformats.formatreader.get_image_reader.assert_called_with("tmp", path="cells.cif")
 
@@ -144,3 +145,53 @@ def test_parse_channels(mocker, tmpdir):
         ).astype(numpy.uint8)
 
     numpy.testing.assert_array_equal(image, expected)
+
+
+def test_parse_tifs(mocker, tmpdir):
+    paths = [
+        "foo_Ch0.tif", "foo_Ch1.tif", "foo_Ch2.tif",
+        "bar_Ch0.tif", "bar_Ch1.tif", "bar_Ch2.tif",
+        "baz_Ch0.tif", "baz_Ch1.tif", "baz_Ch2.tif"
+    ]
+
+    reader = mocker.patch("skimage.io.imread")
+    reader.return_value = numpy.random.rand(48, 48)
+
+    output_directory = tmpdir.mkdir("output")
+
+    deepometry.parse.parse(paths, str(output_directory), 48)
+
+    parsed_pathnames = glob.glob(os.path.join(str(output_directory), "*.npy"))
+
+    assert len(parsed_pathnames) == 3
+
+    image = numpy.load(parsed_pathnames[0])
+
+    assert image.shape == (48, 48, 3)
+
+    assert image.dtype == numpy.uint8
+
+
+def test_parse_tifs_channels(mocker, tmpdir):
+    paths = [
+        "foo_Ch1.tif", "foo_Ch2.tif", "foo_Ch4.tif", "foo_Ch12.tif",
+        "bar_Ch1.tif", "bar_Ch2.tif", "bar_Ch4.tif", "bar_Ch12.tif",
+        "baz_Ch1.tif", "baz_Ch2.tif", "baz_Ch4.tif", "baz_Ch12.tif"
+    ]
+
+    reader = mocker.patch("skimage.io.imread")
+    reader.return_value = numpy.random.rand(48, 48)
+
+    output_directory = tmpdir.mkdir("output")
+
+    deepometry.parse.parse(paths, str(output_directory), 48, channels=[4, 12])
+
+    parsed_pathnames = glob.glob(os.path.join(str(output_directory), "*.npy"))
+
+    assert len(parsed_pathnames) == 3
+
+    image = numpy.load(parsed_pathnames[0])
+
+    assert image.shape == (48, 48, 2)
+
+    assert image.dtype == numpy.uint8

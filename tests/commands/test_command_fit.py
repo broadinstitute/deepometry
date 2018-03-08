@@ -31,13 +31,13 @@ def create_samples(directory):
 
 
 def select_samples(pathnames):
-    n_samples = min([len(subpathnames) for subpathnames in pathnames])
+    n_samples = int(numpy.median([len(subpathnames) for subpathnames in pathnames]))
 
     sample_pathnames = [list(numpy.random.permutation(subpathnames)[:n_samples]) for subpathnames in pathnames]
     sample_pathnames = sum(sample_pathnames, [])
 
-    samples = numpy.empty((4 * n_samples, 48, 48, 3), dtype=numpy.uint8)
-    targets = numpy.empty((4 * n_samples,), dtype=numpy.uint8)
+    samples = numpy.empty((len(sample_pathnames), 48, 48, 3), dtype=numpy.uint8)
+    targets = numpy.empty((len(sample_pathnames),), dtype=numpy.uint8)
 
     for index, sample_pathname in enumerate(sample_pathnames):
         samples[index] = numpy.load(sample_pathname)
@@ -131,8 +131,7 @@ def test_fit(cli_runner, mocker, tmpdir):
         assert len(samples) >= 8
         assert len(targets) >= 8
         assert len(samples) == len(targets)
-        assert sum(targets == 0) >= 2
-        assert sum(targets == 0) == sum(targets == 1) == sum(targets == 2) == sum(targets == 3)
+        assert len(numpy.unique(targets)) == 4
 
         numpy.testing.assert_array_equal(samples, expected_samples)
         numpy.testing.assert_array_equal(targets, expected_targets)

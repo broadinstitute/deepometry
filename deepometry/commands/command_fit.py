@@ -3,7 +3,6 @@ import os
 
 import click
 import numpy
-import pkg_resources
 
 
 @click.command(
@@ -85,6 +84,10 @@ def command(input, batch_size, directory, epochs, name, validation_split, verbos
     )
 
 
+def _filter(paths):
+    return [path for path in paths if os.path.splitext(path)[-1].lower() == ".npy"]
+
+
 def _load(pathnames, labels):
     x = numpy.empty((len(pathnames),) + _shape(pathnames[0]), dtype=numpy.uint8)
 
@@ -103,20 +106,24 @@ def _load(pathnames, labels):
 
 
 def _sample(directories):
-    sampled_pathnames = []
+    samples = []
 
     for directory in directories:
-        subdirectories = sorted(glob.glob(os.path.join(directory, "*")))
+        # List subdirectories, filtering non-directory files
+        subdirectories = sorted([
+            directory for directory in glob.glob(os.path.join(directory, "*")) if os.path.isdir(directory)
+        ])
 
-        subdirectory_pathnames = [glob.glob(os.path.join(subdirectory, "*")) for subdirectory in subdirectories]
+        # Remove files that aren't NPYs
+        subdirectory_paths = [_filter(glob.glob(os.path.join(subdirectory, "*"))) for subdirectory in subdirectories]
 
-        nsamples = min([len(pathnames) for pathnames in subdirectory_pathnames])
+        nsamples = int(numpy.median([len(pathnames) for pathnames in subdirectory_paths]))
 
-        sampled_pathnames += [
-            list(numpy.random.permutation(pathnames)[:nsamples]) for pathnames in subdirectory_pathnames
+        samples += [
+            list(numpy.random.permutation(pathnames)[:nsamples]) for pathnames in subdirectory_paths
         ]
 
-    return sum(sampled_pathnames, [])
+    return sum(samples, [])
 
 
 def _shape(pathname):

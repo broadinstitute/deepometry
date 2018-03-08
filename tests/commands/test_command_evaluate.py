@@ -31,13 +31,16 @@ def create_samples(directory):
 
 
 def load_samples(pathnames):
-    samples = numpy.empty((len(pathnames), 48, 48, 3), dtype=numpy.uint8)
-    targets = numpy.empty((len(pathnames),), dtype=numpy.uint8)
+    sample_pathnames = [list(numpy.random.permutation(subpathnames)) for subpathnames in pathnames]
+    sample_pathnames = sum(sample_pathnames, [])
 
-    for index, pathname in enumerate(pathnames):
-        samples[index] = numpy.load(pathname)
+    samples = numpy.empty((len(sample_pathnames), 48, 48, 3), dtype=numpy.uint8)
+    targets = numpy.empty((len(sample_pathnames),), dtype=numpy.uint8)
 
-        label = os.path.split(os.path.dirname(pathname))[-1]
+    for index, sample_pathname in enumerate(sample_pathnames):
+        samples[index] = numpy.load(sample_pathname)
+
+        label = os.path.split(os.path.dirname(sample_pathname))[-1]
         if label == "g1":
             targets[index] = 0
         elif label == "g2":
@@ -48,6 +51,7 @@ def load_samples(pathnames):
             targets[index] = 3
 
     return samples, targets
+
 
 
 @pytest.fixture()
@@ -66,14 +70,19 @@ def test_evaluate_help(cli_runner):
 
     assert "--name TEXT" in result.output
 
+    assert "--samples INTEGER" in result.output
+
 
 def test_evaluate(cli_runner, mocker, tmpdir):
     input1 = tmpdir.mkdir("experiment_01")
-    input1_pathnames = sum(create_samples(input1), [])
-    input1_samples, input1_targets = load_samples(input1_pathnames)
+    input1_pathnames = create_samples(input1)
 
     input2 = tmpdir.mkdir("experiment_02")
-    input2_pathnames = sum(create_samples(input2), [])
+    input2_pathnames = create_samples(input2)
+
+    numpy.random.seed(17)
+
+    input1_samples, input1_targets = load_samples(input1_pathnames)
     input2_samples, input2_targets = load_samples(input2_pathnames)
 
     expected_samples = numpy.concatenate((input1_samples, input2_samples))
@@ -85,6 +94,8 @@ def test_evaluate(cli_runner, mocker, tmpdir):
     model_dir = tmpdir.mkdir("models")
 
     with mocker.patch("deepometry.model.Model") as model_mock:
+        numpy.random.seed(17)
+
         deepometry.model.Model.return_value = model_mock
 
         cmd = cli_runner.invoke(

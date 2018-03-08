@@ -64,6 +64,7 @@ def test_fit_defaults(data_dir, mocker):
 
         model_mock.fit_generator.assert_called_once_with(
             callbacks=mocker.ANY,
+            class_weight=mocker.ANY,
             epochs=1,
             generator=mocker.ANY,
             steps_per_epoch=9,

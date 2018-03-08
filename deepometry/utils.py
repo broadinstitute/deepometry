@@ -6,14 +6,14 @@ import os.path
 import numpy
 
 
-def load(directories, convert=True, sample=False):
+def load(directories, convert=True, sample=None):
     """
     Load image and label data.
 
     :param directories: List of directories. Subdirectories of `directories` directories are
         class labels and subdirectory contents are image data as NPY arrays.
     :param convert: Convert label strings to integers (default: `True`).
-    :param sample: Undersample image data per subdirectory (default: `False`).
+    :param sample: Undersample image data per subdirectory (default: `None`).
     :return: `(x, y, units)` where `x` is concatenated image data of shape
         `(N samples, row, col, channels)`, `y` is a list of labels of length `N samples`,
         and `units` is the number of unique labels.
@@ -41,7 +41,7 @@ def load(directories, convert=True, sample=False):
     return x, y, len(labels)
 
 
-def _collect(directories, sample=False):
+def _collect(directories, sample=None):
     paths = []
 
     for directory in directories:
@@ -50,10 +50,12 @@ def _collect(directories, sample=False):
 
         if sample:
             if isinstance(sample, bool):
-                sample = int(numpy.median([len(subdir_paths) for subdir_paths in subdirectory_paths]))
+                n_samples = int(numpy.median([len(subdir_paths) for subdir_paths in subdirectory_paths]))
+            else:
+                n_samples = sample
 
             subdirectory_paths = [
-                list(numpy.random.permutation(subdir_paths)[:sample]) for subdir_paths in subdirectory_paths
+                list(numpy.random.permutation(subdir_paths)[:n_samples]) for subdir_paths in subdirectory_paths
             ]
 
         paths += subdirectory_paths

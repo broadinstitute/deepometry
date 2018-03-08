@@ -30,7 +30,7 @@ def _group(paths, channels):
     pattern = "(.*)Ch"
 
     if channels:
-        pattern += "[{:s}]".format("|".join([str(channel) for channel in channels]))
+        pattern += "(?:{:s})\.".format("|".join([str(channel) for channel in channels]))
 
     groups = collections.defaultdict(list)
 

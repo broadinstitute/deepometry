@@ -174,9 +174,9 @@ def test_parse_tifs(mocker, tmpdir):
 
 def test_parse_tifs_channels(mocker, tmpdir):
     paths = [
-        "foo_Ch0.tif", "foo_Ch1.tif", "foo_Ch2.tif",
-        "bar_Ch0.tif", "bar_Ch1.tif", "bar_Ch2.tif",
-        "baz_Ch0.tif", "baz_Ch1.tif", "baz_Ch2.tif"
+        "foo_Ch1.tif", "foo_Ch2.tif", "foo_Ch4.tif", "foo_Ch12.tif",
+        "bar_Ch1.tif", "bar_Ch2.tif", "bar_Ch4.tif", "bar_Ch12.tif",
+        "baz_Ch1.tif", "baz_Ch2.tif", "baz_Ch4.tif", "baz_Ch12.tif"
     ]
 
     reader = mocker.patch("skimage.io.imread")
@@ -184,7 +184,7 @@ def test_parse_tifs_channels(mocker, tmpdir):
 
     output_directory = tmpdir.mkdir("output")
 
-    deepometry.parse.parse(paths, str(output_directory), 48, channels=[0, 2])
+    deepometry.parse.parse(paths, str(output_directory), 48, channels=[4, 12])
 
     parsed_pathnames = glob.glob(os.path.join(str(output_directory), "*.npy"))
 

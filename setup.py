@@ -19,7 +19,7 @@ setuptools.setup(
     install_requires=[
         "click",
         "javabridge",
-        "Keras",
+        "Keras>=2.1.0",
         "keras-resnet>=0.0.7",
         "numpy",
         "python-bioformats",

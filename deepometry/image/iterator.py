@@ -50,10 +50,13 @@ class NumpyArrayIterator(keras.preprocessing.image.Iterator):
         """
         # Keeps under lock only the mechanism which advances the indexing of each batch.
         with self.lock:
-            index_array, current_index, current_batch_size = next(self.index_generator)
+            index_array = next(self.index_generator)
 
         # The transformation of images is not under thread lock so it can be done in parallel
-        batch_x = numpy.zeros(tuple([current_batch_size] + list(self.x.shape)[1:]), dtype=keras.backend.floatx())
+        return self._get_batches_of_transformed_samples(index_array)
+
+    def _get_batches_of_transformed_samples(self, index_array):
+        batch_x = numpy.zeros(tuple([len(index_array)] + list(self.x.shape)[1:]), dtype=keras.backend.floatx())
 
         for i, j in enumerate(index_array):
             x = self.x[j]
@@ -65,10 +68,10 @@ class NumpyArrayIterator(keras.preprocessing.image.Iterator):
             batch_x[i] = x
 
         if self.save_to_dir:
-            for i in range(current_batch_size):
+            for i, j in enumerate(index_array):
                 fname = "{prefix}_{index}_{hash}.{format}".format(
                     prefix=self.save_prefix,
-                    index=current_index + i,
+                    index=j,
                     hash=numpy.random.randint(1e4),
                     format=self.save_format
                 )

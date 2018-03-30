@@ -232,9 +232,9 @@ def test_evaluate_defaults(data_dir, mocker):
         writer.writerow([125.3, 127.12, 121.9])
 
     expected_samples = x.copy()
-    expected_samples[:, :, :, 0] -= 125.3
-    expected_samples[:, :, :, 1] -= 127.12
-    expected_samples[:, :, :, 2] -= 121.9
+    expected_samples[:, :, :, 0] = (expected_samples[:, :, :, 0] - 125.3 + 255.0) / (2.0 * 255.0)
+    expected_samples[:, :, :, 1] = (expected_samples[:, :, :, 1] - 127.12 + 255.0) / (2.0 * 255.0)
+    expected_samples[:, :, :, 2] = (expected_samples[:, :, :, 2] - 121.9 + 255.0) / (2.0 * 255.0)
 
     expected_targets = keras.utils.to_categorical(y, 4)
 
@@ -285,9 +285,9 @@ def test_evaluate_named_model(data_dir, mocker):
         writer.writerow([125.3, 127.12, 121.9])
 
     expected_samples = x.copy()
-    expected_samples[:, :, :, 0] -= 125.3
-    expected_samples[:, :, :, 1] -= 127.12
-    expected_samples[:, :, :, 2] -= 121.9
+    expected_samples[:, :, :, 0] = (expected_samples[:, :, :, 0] - 125.3 + 255.0) / (2.0 * 255.0)
+    expected_samples[:, :, :, 1] = (expected_samples[:, :, :, 1] - 127.12 + 255.0) / (2.0 * 255.0)
+    expected_samples[:, :, :, 2] = (expected_samples[:, :, :, 2] - 121.9 + 255.0) / (2.0 * 255.0)
 
     expected_targets = keras.utils.to_categorical(y, 4)
 
@@ -343,9 +343,9 @@ def test_evaluate_named_directory(data_dir, mocker):
         writer.writerow([125.3, 127.12, 121.9])
 
     expected_samples = x.copy()
-    expected_samples[:, :, :, 0] -= 125.3
-    expected_samples[:, :, :, 1] -= 127.12
-    expected_samples[:, :, :, 2] -= 121.9
+    expected_samples[:, :, :, 0] = (expected_samples[:, :, :, 0] - 125.3 + 255.0) / (2.0 * 255.0)
+    expected_samples[:, :, :, 1] = (expected_samples[:, :, :, 1] - 127.12 + 255.0) / (2.0 * 255.0)
+    expected_samples[:, :, :, 2] = (expected_samples[:, :, :, 2] - 121.9 + 255.0) / (2.0 * 255.0)
 
     expected_targets = keras.utils.to_categorical(y, 4)
 

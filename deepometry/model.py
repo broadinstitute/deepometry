@@ -179,7 +179,7 @@ class Model(object):
     def _center(self, x):
         xc = x.reshape(-1, x.shape[-1])
 
-        xc = xc - self._means()
+        xc = ((xc - self._means() + 255.0) / (2.0 * 255.0))
 
         return xc.reshape(x.shape)
 

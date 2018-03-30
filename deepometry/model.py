@@ -162,7 +162,7 @@ class Model(object):
         generator_options = {
             "height_shift_range": 0.5,
             "horizontal_flip": True,
-            "preprocessing_function": lambda data: data - means,
+            "preprocessing_function": lambda data: ((data - means + 255.0) / (2.0 * 255.0)),
             "rotation_range": 180,
             "vertical_flip": True,
             "width_shift_range": 0.5

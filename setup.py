@@ -19,7 +19,7 @@ setuptools.setup(
     install_requires=[
         "click",
         "javabridge",
-        "Keras>=2.1.0",
+        "Keras==2.1.5",  # TODO: See deepometry.iterator.NumpyArrayIterator's `_get_batches_of_transformed_samples`.
         "keras-resnet>=0.0.7",
         "numpy",
         "python-bioformats",

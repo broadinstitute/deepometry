@@ -61,6 +61,11 @@ class NumpyArrayIterator(keras.preprocessing.image.Iterator):
         for i, j in enumerate(index_array):
             x = self.x[j]
 
+            # `image_data_generator.preprocessing_function` call moved from `image_data_generator.standardize` in 2.1.5
+            # Moved back to `image_data_generator.standardize` in a later release.
+            if self.image_data_generator.preprocessing_function:
+                x = self.image_data_generator.preprocessing_function(x)
+
             x = self.image_data_generator.random_transform(x.astype(keras.backend.floatx()))
 
             x = self.image_data_generator.standardize(x)

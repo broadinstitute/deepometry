@@ -110,9 +110,9 @@ def test_fit_defaults(data_dir, mocker):
         sample = x_train[0]
 
         expected = numpy.empty((48, 48, 3))
-        expected[:, :, 0] = sample[:, :, 0] - numpy.mean(x_train[:, :, :, 0])
-        expected[:, :, 1] = sample[:, :, 1] - numpy.mean(x_train[:, :, :, 1])
-        expected[:, :, 2] = sample[:, :, 2] - numpy.mean(x_train[:, :, :, 2])
+        expected[:, :, 0] = (sample[:, :, 0] - numpy.mean(x_train[:, :, :, 0]) + 255.0) / (2.0 * 255.0)
+        expected[:, :, 1] = (sample[:, :, 1] - numpy.mean(x_train[:, :, :, 1]) + 255.0) / (2.0 * 255.0)
+        expected[:, :, 2] = (sample[:, :, 2] - numpy.mean(x_train[:, :, :, 2]) + 255.0) / (2.0 * 255.0)
 
         actual = generator.image_data_generator.preprocessing_function(sample)
 
@@ -133,9 +133,9 @@ def test_fit_defaults(data_dir, mocker):
         sample = x_valid[0]
 
         expected = numpy.empty((48, 48, 3))
-        expected[:, :, 0] = sample[:, :, 0] - numpy.mean(x_train[:, :, :, 0])
-        expected[:, :, 1] = sample[:, :, 1] - numpy.mean(x_train[:, :, :, 1])
-        expected[:, :, 2] = sample[:, :, 2] - numpy.mean(x_train[:, :, :, 2])
+        expected[:, :, 0] = (sample[:, :, 0] - numpy.mean(x_train[:, :, :, 0]) + 255.0) / (2.0 * 255.0)
+        expected[:, :, 1] = (sample[:, :, 1] - numpy.mean(x_train[:, :, :, 1]) + 255.0) / (2.0 * 255.0)
+        expected[:, :, 2] = (sample[:, :, 2] - numpy.mean(x_train[:, :, :, 2]) + 255.0) / (2.0 * 255.0)
 
         actual = generator.image_data_generator.preprocessing_function(sample)
 

@@ -1,12 +1,16 @@
+# coding: utf-8
+
 import collections
 import csv
 import os.path
 
 import keras
+import keras.models
 import keras.preprocessing.image
 import keras_resnet.models
 import numpy
 import pkg_resources
+import sklearn.preprocessing
 
 import deepometry.image.generator
 
@@ -67,6 +71,36 @@ class Model(object):
             batch_size=batch_size,
             verbose=verbose
         )
+
+    def extract(self, x, batch_size=32, standardize=False, verbose=0):
+        """
+        Extract learned features from the model.
+
+        Computation is done in batches.
+
+        :param x: NumPy array of data.
+        :param batch_size: Number of samples evaluated per batch.
+        :param standardize: If `True`, center to the mean and component wise scale to unit variance (default: `False`).
+        :param verbose: Verbosity mode, 0 = silent, or 1 = verbose.
+        :return: NumPy array of shape (samples, features).
+        """
+        self.model.load_weights(self._resource("checkpoint.hdf5"))
+
+        response_model = keras.models.Model(
+            inputs=self.model.input,
+            outputs=self.model.layers[-2].output
+        )
+
+        features = response_model.predict(
+            self._center(x),
+            batch_size=batch_size,
+            verbose=verbose
+        )
+
+        if standardize:
+            return sklearn.preprocessing.scale(features)
+
+        return features
 
     def fit(self, x, y, batch_size=32, class_weight="auto", epochs=512, validation_split=0.2, verbose=0):
         """
@@ -152,7 +186,7 @@ class Model(object):
     def _center(self, x):
         xc = x.reshape(-1, x.shape[-1])
 
-        xc = xc - self._means()
+        xc = ((xc - self._means() + 255.0) / (2.0 * 255.0))
 
         return xc.reshape(x.shape)
 

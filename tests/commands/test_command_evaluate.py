@@ -31,8 +31,7 @@ def create_samples(directory):
 
 
 def load_samples(pathnames):
-    sample_pathnames = [list(numpy.random.permutation(subpathnames)) for subpathnames in pathnames]
-    sample_pathnames = sum(sample_pathnames, [])
+    sample_pathnames = sum(pathnames, [])
 
     samples = numpy.empty((len(sample_pathnames), 48, 48, 3), dtype=numpy.uint8)
     targets = numpy.empty((len(sample_pathnames),), dtype=numpy.uint8)
@@ -51,7 +50,6 @@ def load_samples(pathnames):
             targets[index] = 3
 
     return samples, targets
-
 
 
 @pytest.fixture()
@@ -80,8 +78,6 @@ def test_evaluate(cli_runner, mocker, tmpdir):
     input2 = tmpdir.mkdir("experiment_02")
     input2_pathnames = create_samples(input2)
 
-    numpy.random.seed(17)
-
     input1_samples, input1_targets = load_samples(input1_pathnames)
     input2_samples, input2_targets = load_samples(input2_pathnames)
 
@@ -94,8 +90,6 @@ def test_evaluate(cli_runner, mocker, tmpdir):
     model_dir = tmpdir.mkdir("models")
 
     with mocker.patch("deepometry.model.Model") as model_mock:
-        numpy.random.seed(17)
-
         deepometry.model.Model.return_value = model_mock
 
         cmd = cli_runner.invoke(

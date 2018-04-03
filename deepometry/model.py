@@ -86,9 +86,16 @@ class Model(object):
         """
         self.model.load_weights(self._resource("checkpoint.hdf5"))
 
-        abstract_model = keras.models.Sequential([self.model.layers[-2]])
+        response_model = keras.models.Model(
+            inputs=self.model.input,
+            outputs=self.model.layers[-2].output
+        )
 
-        features = abstract_model.predict(self._center(x), batch_size=batch_size, verbose=verbose)
+        features = response_model.predict(
+            self._center(x),
+            batch_size=batch_size,
+            verbose=verbose
+        )
 
         if standardize:
             return sklearn.preprocessing.scale(features)

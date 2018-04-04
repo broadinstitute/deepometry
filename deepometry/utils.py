@@ -10,13 +10,13 @@ def load(directories, convert=True, sample=None):
     """
     Load image and label data.
 
-    :param directories: List of directories. Subdirectories of `directories` directories are
+    :param directories: List of directories. Subdirectories of ``directories`` are
         class labels and subdirectory contents are image data as NPY arrays.
-    :param convert: Convert label strings to integers (default: `True`).
-    :param sample: Undersample image data per subdirectory (default: `None`).
-    :return: `(x, y, units)` where `x` is concatenated image data of shape
-        `(N samples, row, col, channels)`, `y` is a list of labels of length `N samples`,
-        and `units` is the number of unique labels.
+    :param convert: Convert label strings to integers (default: ``True``).
+    :param sample: Undersample image data per subdirectory (default: ``None``).
+    :return: ``(x, y, units)`` where ``x`` is concatenated image data of shape
+        ``(N samples, row, col, channels)``, ``y`` is a list of labels of length ``N samples``,
+        and ``units`` is the number of unique labels.
     """
     paths, labels = _collect(directories, sample)
     label_to_index = {label: index for index, label in enumerate(labels)}

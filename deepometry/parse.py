@@ -20,12 +20,12 @@ def parse(paths, output_directory, size, channels=None):
     Prepare a collection of images for training, evaluation, and prediction.
 
     .TIF/.TIFF data is expected to be single-channel data with channel information encoded in the filename: e.g.,
-    `.*_Ch[0-9]+.TIF`.
+    ``/.*_Ch[0-9]+.TIF/``.
 
     :param paths: List of pathnames to parse.
     :param output_directory: Location to exported parsed image data.
-    :param size: Final dimension `(size, size)` of parsed image data.
-    :param channels: List of channels to export. Use `None` to export all available channels.
+    :param size: Final dimension ``(size, size)`` of parsed image data.
+    :param channels: List of channels to export. Use ``None`` to export all available channels.
     """
     ext = os.path.splitext(paths[0])[-1].lower()
 

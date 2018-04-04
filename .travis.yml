@@ -3,7 +3,7 @@ before_install:
 cache: pip
 dist: trusty
 install:
-  - pip install --upgrade --editable .[test]
+  - pip install --upgrade --editable .[development]
 language: python
 python:
   - "2.7"

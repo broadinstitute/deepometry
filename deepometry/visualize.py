@@ -20,7 +20,7 @@ def make_projection(features, metadata=None, log_directory=None, sprites=None, s
         metadata must include column labels.
     :param log_directory: Output directory for visualized data.
     :param sprites: Path to sprites image.
-    :param sprites_dim: Dimension `(sprites_dim, sprites_dim)` of a sprite.
+    :param sprites_dim: Dimension ``(sprites_dim, sprites_dim)`` of a sprite.
     :return: Output directory for visualized data.
     """
     try:

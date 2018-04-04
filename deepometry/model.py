@@ -16,19 +16,19 @@ import deepometry.image.generator
 
 
 class Model(object):
-    def __init__(self, shape, units, directory=None, name=None):
-        """
-        Create a model for single-cell image classification.
+    """
+    Create a model for single-cell image classification.
 
-        :param shape: Input image shape, including channels. Grayscale data should specify channels as 1. Check your
-                      keras configuration for channel order (e.g., "image_data_format": "channels_last"). Usually,
-                      this configuration is defined at `$HOME/.keras/keras.json`, or `%USERPROFILE%\.keras\keras.json`
-                      on Windows.
-        :param units: Number of predictable classes.
-        :param directory: (Optional) Output directory for model checkpoints, metrics, and metadata. Otherwise, the
-                          package's data directory is used.
-        :param name: (Optional) A unique identifier for referencing this model.
-        """
+    :param shape: Input image shape, including channels. Grayscale data should specify channels as 1. Check your
+                  keras configuration for channel order (e.g., ``"image_data_format": "channels_last"``). Usually,
+                  this configuration is defined at ``$HOME/.keras/keras.json``, or ``%USERPROFILE%\.keras\keras.json``
+                  on Windows.
+    :param units: Number of predictable classes.
+    :param directory: (Optional) Output directory for model checkpoints, metrics, and metadata. Otherwise, the
+                      package's data directory is used.
+    :param name: (Optional) A unique identifier for referencing this model.
+    """
+    def __init__(self, shape, units, directory=None, name=None):
         self.directory = directory
 
         self.name = name
@@ -80,9 +80,10 @@ class Model(object):
 
         :param x: NumPy array of data.
         :param batch_size: Number of samples evaluated per batch.
-        :param standardize: If `True`, center to the mean and component wise scale to unit variance (default: `False`).
+        :param standardize: If ``True``, center to the mean and component wise scale to unit variance
+            (default: ``False``).
         :param verbose: Verbosity mode, 0 = silent, or 1 = verbose.
-        :return: NumPy array of shape (samples, features).
+        :return: NumPy array of shape ``(samples, features)``.
         """
         self.model.load_weights(self._resource("checkpoint.hdf5"))
 
@@ -110,8 +111,8 @@ class Model(object):
         :param x: NumPy array of training data.
         :param y: NumPy array of target data.
         :param batch_size: Number of samples per gradient update.
-        :param class_weight: Dictionary mapping labels to weights. Use `"auto"` to automatically compute weights.
-            Use `None` to ignore weights.
+        :param class_weight: Dictionary mapping labels to weights. Use ``"auto"`` to automatically compute weights.
+            Use ``None`` to ignore weights.
         :param epochs: Number of times to iterate over the training data arrays.
         :param validation_split: Fraction of the training data to be used as validation data.
         :param verbose: Verbosity mode. 0 = silent, 1 = verbose, 2 = one log line per epoch.

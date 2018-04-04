@@ -11,9 +11,15 @@ setuptools.setup(
     deepometry=deepometry.command:command
     """,
     extras_require={
-        "test": [
+        "development": [
+            "ipython",
+            "ipykernel",
+            "nbsphinx",
+            "pandoc",
             "pytest",
-            "pytest-mock"
+            "pytest-mock",
+            "sphinx",
+            "sphinx_rtd_theme"
         ]
     },
     install_requires=[

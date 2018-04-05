@@ -79,7 +79,7 @@ def _parse_cif(path, output_directory, size, channels):
         parsed_image = numpy.empty((size, size, len(channels)), dtype=numpy.uint8)
 
         for (channel_index, channel) in enumerate(channels):
-            parsed_image[:, :, channel_index] = _rescale(_resize(image[:, :, channel], size))
+            parsed_image[:, :, channel_index] = _resize(image[:, :, channel], size)
 
         output_pathname = os.path.join(
             output_directory,
@@ -102,7 +102,7 @@ def _parse_tif(paths, output_directory, size, channels):
         for index, path in enumerate(group_paths):
             data = skimage.io.imread(path)
 
-            parsed_image[:, :, index] = _rescale(_resize(data, size))
+            parsed_image[:, :, index] = _resize(data, size)
 
         output_pathname = os.path.join(
             output_directory,
@@ -115,54 +115,82 @@ def _parse_tif(paths, output_directory, size, channels):
         numpy.save(output_pathname, parsed_image)
 
 
-def _rescale(image):
-    vmin, vmax = scipy.stats.scoreatpercentile(image, (0.5, 99.5))
-
-    return skimage.exposure.rescale_intensity(image, in_range=(vmin, vmax), out_range=numpy.uint8).astype(numpy.uint8)
-
-
-def _resize(image, size):
-    column_adjust = size - image.shape[0]
+def _resize(x, size):
+    column_adjust = size - x.shape[0]
     column_adjust_start = int(numpy.floor(column_adjust / 2.0))
     column_adjust_end = int(numpy.ceil(column_adjust / 2.0))
 
-    row_adjust = size - image.shape[1]
+    row_adjust = size - x.shape[1]
     row_adjust_start = int(numpy.floor(row_adjust / 2.0))
     row_adjust_end = int(numpy.ceil(row_adjust / 2.0))
 
-    resized = skimage.util.crop(
-        image,
-        (
+    # Crop
+    cropped = _crop(
+        x,
+        crop_width=(
             numpy.abs(numpy.minimum((column_adjust_start, column_adjust_end), (0, 0))),
             numpy.abs(numpy.minimum((row_adjust_start, row_adjust_end), (0, 0)))
         )
     )
 
+    # Clip and rescale
+    clipped = _clip(cropped)
+
+    # Pad
     return _pad(
-        resized,
-        (
+        clipped,
+        pad_width=(
             numpy.maximum((column_adjust_start, column_adjust_end), (0, 0)),
             numpy.maximum((row_adjust_start, row_adjust_end), (0, 0))
         )
     )
 
 
-def _pad(image, pad_width):
-    # TODO: More robust background sampling. Ideas:
-    #   - Sample all 4 corners, discarding outliers (possible artifacts in corner),
-    #   - Sample masked pixels,
-    #   - Assuming a bimodal intensity distribution, sample the mean and standard deviation from the background
-    #     distribution.
-    sample = image[-10:, -10:]
+def _crop(x, crop_width):
+    return skimage.util.crop(x, crop_width)
 
-    return numpy.pad(image, pad_width, _pad_normal, mean=numpy.mean(sample), std=numpy.std(sample))
+
+def _clip(x):
+    vmin, vmax = scipy.stats.scoreatpercentile(x, (0.5, 99.5))
+
+    return skimage.exposure.rescale_intensity(x, in_range=(vmin, vmax))
+
+
+def _pad(x, pad_width):
+    corners = numpy.asarray((
+        x[:10, :10].flatten(),
+        x[:10, -10:].flatten(),
+        x[-10:, :10].flatten(),
+        x[-10:, -10:].flatten()
+    ))
+
+    means = numpy.mean(corners, axis=1)
+    stds = numpy.std(corners, axis=1)
+
+    # Choose the corner with the lowest standard deviation.
+    # This is most likely to be background, in the majority
+    # of observed cases.
+    std = numpy.min(stds)
+
+    idx = numpy.where(stds == std)[0][0]
+    mean = means[idx]
+
+    return numpy.pad(x, pad_width, _pad_normal, mean=mean, std=std)
 
 
 def _pad_normal(vector, pad_width, iaxis, kwargs):
     if pad_width[0] > 0:
-        vector[:pad_width[0]] = numpy.random.normal(kwargs["mean"], kwargs["std"], vector[:pad_width[0]].shape)
+        vector[:pad_width[0]] = numpy.random.normal(
+            kwargs["mean"],
+            kwargs["std"],
+            vector[:pad_width[0]].shape
+        )
 
     if pad_width[1] > 0:
-        vector[-pad_width[1]:] = numpy.random.normal(kwargs["mean"], kwargs["std"], vector[-pad_width[1]:].shape)
+        vector[-pad_width[1]:] = numpy.random.normal(
+            kwargs["mean"],
+            kwargs["std"],
+            vector[-pad_width[1]:].shape
+        )
 
     return vector

@@ -137,13 +137,16 @@ def _resize(x, size):
     clipped = _clip(cropped)
 
     # Pad
-    return _pad(
+    padded = _pad(
         clipped,
         pad_width=(
             numpy.maximum((column_adjust_start, column_adjust_end), (0, 0)),
             numpy.maximum((row_adjust_start, row_adjust_end), (0, 0))
         )
     )
+
+    # Convert to uint-8
+    return _convert(padded)
 
 
 def _crop(x, crop_width):
@@ -176,6 +179,13 @@ def _pad(x, pad_width):
     mean = means[idx]
 
     return numpy.pad(x, pad_width, _pad_normal, mean=mean, std=std)
+
+
+def _convert(x):
+    if x.dtype == numpy.uint8:
+        return x
+
+    return skimage.img_as_ubyte(x)
 
 
 def _pad_normal(vector, pad_width, iaxis, kwargs):

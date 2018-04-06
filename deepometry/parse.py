@@ -156,7 +156,7 @@ def _crop(x, crop_width):
 def _clip(x):
     vmin, vmax = scipy.stats.scoreatpercentile(x, (0.5, 99.5))
 
-    return skimage.exposure.rescale_intensity(x, in_range=(vmin, vmax))
+    return numpy.clip(x, vmin, vmax)
 
 
 def _pad(x, pad_width):
@@ -185,7 +185,10 @@ def _convert(x):
     if x.dtype == numpy.uint8:
         return x
 
-    return skimage.img_as_ubyte(x)
+    return skimage.exposure.rescale_intensity(
+        x,
+        out_range=numpy.uint8
+    ).astype(numpy.uint8)
 
 
 def _pad_normal(vector, pad_width, iaxis, kwargs):

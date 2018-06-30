@@ -94,7 +94,7 @@ def _parse_cif(path, output_directory, size, channels):
 
 
 def _parse_tif(paths, output_directory, size, channels):
-    groups = _group(paths, channels)
+    groups = _group(sorted(paths), sorted(channels))
 
     for group, group_paths in groups.items():
         parsed_image = numpy.empty((size, size, len(group_paths)), dtype=numpy.uint8)

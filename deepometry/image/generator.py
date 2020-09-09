@@ -1,6 +1,9 @@
+import sys
+sys.path.insert(0, '/home/paul/.conda/envs/tensorflow/lib/python3.6/site-packages')
+
 import keras.preprocessing.image
 
-import deepometry.image.iterator
+import deepometry.image.iterator_balanced, deepometry.image.iterator
 
 
 class ImageDataGenerator(keras.preprocessing.image.ImageDataGenerator):
@@ -27,16 +30,32 @@ class ImageDataGenerator(keras.preprocessing.image.ImageDataGenerator):
              seed=None,
              save_to_dir=None,
              save_prefix="",
-             save_format="tif"):
-        return deepometry.image.iterator.NumpyArrayIterator(
-            x, y, self,
-            batch_size=batch_size,
-            shuffle=shuffle,
-            seed=seed,
-            save_to_dir=save_to_dir,
-            save_prefix=save_prefix,
-            save_format=save_format
-        )
+             save_format="tif",
+             balance=True,
+             mixup_alpha=0.0):
+        
+        if balance:
+            return deepometry.image.iterator_balanced.NumpyArrayIterator(
+                x, y, self,
+                batch_size=batch_size,
+                shuffle=shuffle,
+                seed=seed,
+                save_to_dir=save_to_dir,
+                save_prefix=save_prefix,
+                save_format=save_format,
+                mixup_alpha=mixup_alpha
+            )
+        else:
+            return deepometry.image.iterator.NumpyArrayIterator(
+                x, y, self,
+                batch_size=batch_size,
+                shuffle=shuffle,
+                seed=seed,
+                save_to_dir=save_to_dir,
+                save_prefix=save_prefix,
+                save_format=save_format,
+                mixup_alpha=mixup_alpha
+            )            
 
     def flow_from_directory(self, directory,
                             target_size=(48, 48),

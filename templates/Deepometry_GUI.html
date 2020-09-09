@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="Deep learning workflow for Bioimaging analysis">
+    <meta name="author" content="Minh Doan">
+    <link rel="icon" href="static/favicon.ico"> 
+
+    <title>Deepometry WebApp v1.0</title>
+    <link rel = "stylesheet"
+          type = "text/css"
+          href = "static/Deepometry_CSS.css" />
+
+    <script language="JavaScript">
+    function getFolder(){
+      return showModalDialog("folderDialog.html","","width:400px;height:400px;resizeable:yes;");
+    }
+    </script>
+    
+  </head>
+
+  <body>
+    <table class="border" cellspacing="0" cellpadding="3", width="100%">
+      <col style="width:19%">
+      <col style="width:27%">
+      <col style="width:27%">
+      <col style="width:27%">
+
+      <tbody>
+        <form  action="/" method="post" role="form">
+        
+        <tr class = "nooverall">
+          <td align="center">
+            <p><strong>Input shape</strong></p>
+          </td> 
+
+          <td id="CELL1" align="center" bgcolor="#F0FFF0">
+            <p><strong>Training set</strong></p>
+          </td>
+
+          <td align="center">
+            <p><strong>Evaluation set</strong></p>
+          </td>
+
+          <td align="center" >
+            <p><strong>Unannotated set</strong></p>
+          </td>
+        </tr>
+
+        
+        <tr class="noBorder">
+          
+          <td style="vertical-align: top;">
+
+              <table style="border: 0px;">
+                <tr>
+                  <td align="right"><label for="frame">Frame size:</label></td>
+                  <td align="left"><input type="text" class="form-control" id="frame" name="frame" placeholder="48" /></td>
+                </tr>
+                <tr>
+                  <td align="right"><label for="channels">Channels:</label></td>
+                  <td align="left"><input type="text" class="form-control" id="channels" name="channels" placeholder="[1,9,12]" /></td>
+                </tr>
+                <tr>
+                  <td align="right"><label for="montage_size">Montage size:</label></td>
+                  <td align="left"><input type="text" class="form-control" id="montage_size" name="montage_size" placeholder="Leave blank for no stitching" /></td>
+                </tr>
+              </table>
+                          
+          </td>
+
+          <td id="CELL2" style="vertical-align: top;">
+
+              <table style="border: 0px;">
+                <tr>
+                  <td align="right"><label for="patients">Input location:</label></td>
+                  <td align="left"><input type="text" class="form-control" id="input_dir" name="input_dir" placeholder="/Data/Raw_training_data" /></td>
+                </tr>
+                <tr>
+                  <td align="right"><label for="dest">Output location:</label></td>
+                  <td align="left"><input type="text" class="form-control" id="output_dir" name="output_dir" placeholder="/Data/Parsed_training_data" /></td>
+                </tr>
+              </table>
+ 
+          </td>
+
+          <td style="vertical-align: top;">
+
+              <table style="border: 0px;">
+                <tr>
+                  <td align="right"><label for="patients">Input location:</label></td>
+                  <td align="left"><input type="text" class="form-control" id="input_dir2" name="input_dir2" placeholder="/Data/Raw_eval_data" /></td>
+                </tr>
+                <tr>
+                  <td align="right"><label for="dest">Output location:</label></td>
+                  <td align="left"><input type="text" class="form-control" id="output_dir2" name="output_dir2" placeholder="/Data/Parsed_eval_data" /></td>
+                </tr>
+              </table>
+
+          </td>
+
+          <td style="vertical-align: top;">
+
+              <table style="border: 0px;">
+                <tr>
+                  <td align="right"><label for="patients">Input location:</label></td>
+                  <td align="left"><input type="text" class="form-control" id="input_dir3" name="input_dir3" placeholder="/Data/Raw_predict_data" /></td>
+                </tr>
+                <tr>
+                  <td align="right"><label for="dest">Output location:</label></td>
+                  <td align="left"><input type="text" class="form-control" id="output_dir3" name="output_dir3" placeholder="/Data/Parsed_predict_data" /></td>
+                </tr>
+              </table>
+
+          </td>                 
+        </tr>
+                            
+        
+        <tr class="noBorder">
+          <td> &nbsp;</td>
+    
+          <td id="CELL4" align="right"> Recommended input structure:</td>
+
+          <td align="right">Output results:</td>
+          
+          <td> &nbsp;</td>
+        </tr>
+      
+        
+        <tr class="noBorder">
+
+          <td> &nbsp;</td>
+
+
+          <td id="CELL5" align = "center" colspan = "2" > 
+            <div id="wrapper">
+                <div id="div1" style="width: 170px; height: 170px; position: relative; padding: 20px;">
+                <img src="static/input_folder_tree.png" width="100%" height="100%" style="position: absolute; top: 0; left: 20px; z-index: 1; ">
+                <div id="div2">
+                    
+                <div id="div1" style="width: 170px; height: 170px; position: relative; padding: 20px;">
+                <img src="static/arrow.png" width="50%" height="20%" style="position: absolute; top: 0; left: 270px; z-index: 1; ">
+                <div id="div2">
+              </div>
+            </div>
+          </td>
+          <td>               
+            <div style="width: 170px; height: 170px; position: relative; padding: 20px;">
+              <img src="static/output_folder_tree.png" width="130%" height="100%" style="position: absolute; top: 0; left: 20px; z-index: 1; ">
+            </div>
+          </td>           
+        </tr>
+
+
+        <tr class="noBorder">
+          <td> &nbsp;</td>
+
+          <td id="CELL6" align = "center">
+            <button type="submit" class="btn btn-success" name='parse_train_btn'>Parse training set</button>
+            <div id='image_location'></div>
+          </td>
+          
+          <td align = "center">
+            <button type="submit" class="btn btn-success" name='parse_eval_btn'>Parse evaluation set</button>
+            <div id='image_location'></div>
+          </td>
+
+          <td align = "center">
+            <button type="submit" class="btn btn-success" name='parse_predict_btn'>Parse test set</button>
+            <div id='image_location'></div>
+          </td>
+        </tr>
+
+
+        <!-- DEEP LEARNING OPERATIONS -->
+        
+        <tr class = "nooverall">
+          <td align="center">
+            <p><strong>Deep learning operations</strong></p>
+          </td>
+
+          <td id="CELL8" align="center" bgcolor="#F0FFF0">
+            <p><strong>Model training</strong></p>
+          </td>
+
+          <td align="center">
+            <p><strong>Evaluation</strong></p>
+          </td>
+
+          <td align="center">
+            <p><strong>Prediction</strong></p>
+          </td>
+        </tr>
+
+
+        <tr class="noBorder">
+        
+          <td> &nbsp;</td>
+
+          <td id="CELL7" style="vertical-align: top;">
+            <table style="border: 0px;">
+              <tr>
+                <td align="right"><label for="input_dir4">Input location:</label></td>
+                <td align="left"><input type="text" class="form-control" id="input_dir4" name="input_dir4" placeholder="/Data/Parsed_training_data" /></td>
+              </tr>
+              <tr>
+                <td align="right"><label for="output_dir4">Output location:</label></td>
+                <td align="left"><input type="output_dir4" class="form-control" id="output_dir4" name="output_dir4" placeholder="/Data/Saved_Model" /></td>
+              </tr>
+              <tr>
+                <td align="right"><label for="epochs">Learning iteration:</label></td>
+                <td align="left"><input type="epochs" class="form-control" id="epochs" name="epochs" placeholder="512" /></td>
+              </tr>
+            </table>
+
+
+          </td>
+
+          <td style="vertical-align: top;">
+              <table style="border: 0px;">
+                <tr>
+                  <td align="right"><label for="input_dir5">Input location:</label></td>
+                  <td align="left"><input type="text" class="form-control" id="input_dir5" name="input_dir5" placeholder="/Data/Parsed_eval_data" /></td>
+                </tr>
+                <tr>
+                  <td align="right"><label for="output_dir5">Output location:</label></td>
+                  <td align="left"><input type="output_dir5" class="form-control" id="output_dir5" name="output_dir5" placeholder="/Data/Eval_output" /></td>
+                </tr>
+                <tr>
+                  <td align="right"><label for="modellocation">Model location:</label></td>
+                  <td align="left"><input type="modellocation" class="form-control" id="modellocation" name="modellocation" placeholder="/Data/Saved_Model" /></td>
+                </tr>
+              </table>
+          </td>
+
+          <td style="vertical-align: top;">
+              <table style="border: 0px;">
+                <tr>
+                  <td align="right"><label for="input_dir6">Input location:</label></td>
+                  <td align="left"><input type="text" class="form-control" id="input_dir6" name="input_dir6" placeholder="/Data/Parsed_predict_data" /></td>
+                </tr>            
+                <tr>
+                  <td align="right"><label for="output_dir6">Output location:</label></td>
+                  <td align="left"><input type="output_dir6" class="form-control" id="output_dir6" name="output_dir6" placeholder="/Data/Predicted_output" /></td>
+                </tr>
+                <tr>
+                  <td align="right"><label for="modellocation2">Model location:</label></td>
+                  <td align="left"><input type="modellocation2" class="form-control" id="modellocation2" name="modellocation2" placeholder="/Data/Saved_Model" /></td>
+                </tr>       
+              </table>
+          </td>
+        </tr>
+
+
+
+        <tr class="noBorder">
+
+          <td> &nbsp;</td>
+          
+          <td id="CELL11" style="vertical-align: top;"> 
+            <table style="border: 0px;">
+              <tr>
+                <td align="right" style="vertical-align: top;">Target classification:</td>
+                
+                <td align="left">
+                  <input type="radio" name="class_option" id="Experiment" value="Experiment" /> Experiments</input>
+                  <br>
+                  <input type="radio" name="class_option" id="Day" value="Day" /> Days</input>
+                  <br>
+                  <input type="radio" name="class_option" id="Sample" value="Sample" /> Samples</input>
+                  <br>
+                  <input type="radio" name="class_option" id="Replicate" value="Replicate" /> Replicates</input>
+                  <br>
+                  <input type="radio" name="class_option" id="Class" value="Class" /> Classes</input>
+                </td>
+              </tr>
+            </table>
+          </td>
+                                        
+          <td align = "center" > 
+            <div style="width: 170px; height: 170px; position: relative; padding: 20px;">
+              <img src="static/confusion_matrix.jpg" width="110%" height="100%" style="position: absolute; top: 0; left: 0px; z-index: 1; ">
+            </div>
+          </td>
+          
+          <td align = "center">
+            <div style="width: 170px; height: 170px; position: relative; padding: 20px;">
+              <img src="static/prediction_accuracy.png" width="110%" height="100%" style="position: absolute; top: 0; left: 0px; z-index: 1; ">
+            </div>
+          </td>
+        </tr>
+        
+        
+
+        <tr class="noBorder">
+          
+          <td>&nbsp;</td>
+
+          <td id="CELL12" align = "center">
+            <button type="submit" class="btn btn-success" name='train_btn'>Train</button>
+          </td>
+                                        
+          <td align = "center">
+            <button type="submit" class="btn btn-success" name='evaluate_btn'>Evaluate</button>					   
+          </td>
+          
+          <td align = "center">
+            <button type="submit" class="btn btn-success" name='predict_btn'>Predict</button>
+          </td>
+                                      
+        </tr>
+
+
+        <tr class="noBorder">            
+          <td> &nbsp;</td>
+
+          <td id="CELL13"> &nbsp;</td>
+          
+          <td>
+            <table style="border: 0px;">
+              <tr>
+                <td align="right" style="vertical-align: top;">Feature extraction:</td>
+                
+                <td align="left">
+                  <input type="radio" name="feature_extraction_layer" id="res4a_relu" value="res4a_relu" /> Res4a_ReLU</input>
+                  <br>
+                        
+                  <input type="radio" name="feature_extraction_layer" id="res5a_relu" value="res5a_relu" /> Res5a_ReLU</input>
+                  <br>
+      
+                  <input type="radio" name="feature_extraction_layer" id="pool5" value="pool5" /> pool5</input>
+                  <br>   
+                </td>               
+              </tr>    
+            </table>                                
+          </td>
+          
+          <td>&nbsp;</td>
+        </tr>
+
+
+        <tr class="noBorder">                   
+          <td>&nbsp;</td>
+
+          <td id="CELL14">&nbsp;</td>
+
+          <td align = "center">      
+            <div style="width: 170px; height: 170px; position: relative;  padding: 20px;">
+              <img src="static/3d_plot.png" width="115%" height="100%" style="position: absolute; top: 0; left: 0px; z-index: 1;">
+            </div>
+
+            <button type="submit" class="btn btn-success" name='extract_btn'>Extract</button>
+            
+          </td>
+        </tr>
+
+        
+        </form>
+
+      </tbody>
+    </table>
+
+    <!--
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+
+        {% for message in messages %}
+
+          {% if "Error" not in message: %}
+            <div class="alert alert-info">
+              <strong>Success!</strong> 
+            </div>
+          {% endif %}
+
+          {% if "Error" in message: %}
+            <div class="alert alert-warning">
+              { { message }}
+            </div>
+          {% endif %}
+
+        {% endfor %}
+        
+      {% endif %}
+    {% endwith %}
+    -->
+    
+
+  </body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+

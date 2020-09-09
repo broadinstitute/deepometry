@@ -33,6 +33,7 @@ class NumpyArrayIterator(keras.preprocessing.image.Iterator):
 
         if y is not None:
             self.y = numpy.asarray(y)
+            self.class_index = {i:numpy.where(self.y[:,i] > 0)[0] for i in range(self.y.shape[1])}
         else:
             self.y = None
 
@@ -74,7 +75,27 @@ class NumpyArrayIterator(keras.preprocessing.image.Iterator):
             return x,y
 
     def _get_batches_of_transformed_samples(self, index_array):
-        batch_x = numpy.zeros(tuple([len(index_array)] + list(self.x.shape)[1:]), dtype=keras.backend.floatx())
+
+
+        num_classes = len(self.class_index)
+        per_class_samples = [ int(self.batch_size / num_classes) ] * num_classes
+        extra = numpy.random.randint(num_classes)
+        per_class_samples[extra] += self.batch_size % num_classes
+
+        del(index_array)
+        index_array = []
+        for classId, numSamples in enumerate(per_class_samples):
+            numpy.random.shuffle(self.class_index[classId])
+            index_array += self.class_index[classId][0:numSamples].tolist()
+
+        numpy.random.shuffle(index_array)            
+        current_index = index_array[0]
+        current_batch_size = self.batch_size
+
+
+
+
+        batch_x = numpy.zeros(tuple([current_batch_size] + list(self.x.shape)[1:]), dtype=keras.backend.floatx())
 
         for i, j in enumerate(index_array):
             x = self.x[j]

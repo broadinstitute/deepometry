@@ -1,5 +1,3 @@
-# coding: utf-8
-
 import logging
 import os.path
 
@@ -13,7 +11,6 @@ logger = logging.getLogger(__name__)
 
 def make_projection(features, metadata=None, log_directory=None, sprites=None, sprites_dim=None):
     """
-
     :param features: Embedded features TSV, one row per sample.
     :param metadata: Additional fields (e.g., labels) corresponding to sample data,
         as a TSV. Single-column metadata should exclude column label. Multi-column
@@ -75,7 +72,6 @@ def make_projection(features, metadata=None, log_directory=None, sprites=None, s
 def images_to_sprite(x):
     """
     Creates the sprite image along with any necessary padding.
-
     :param x: NxHxW[x3] tensor containing the images.
     :return: Properly shaped HxWx3 image with any necessary padding.
     """

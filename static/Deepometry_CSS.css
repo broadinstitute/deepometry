@@ -1,0 +1,221 @@
+html *
+{
+   font-size: 10.5pt !important;
+   color: #000 !important;
+   font-family: Arial !important;
+}
+body {
+  font: normal 10px Verdana, Arial, sans-serif;
+}
+
+.borderexample
+{
+border-style:solid;
+border-color:#287EC7;
+}
+
+.table {
+  border-collapse: collapse;
+}
+
+table, tr, td {
+  border: 1px solid black;
+}
+
+tr.noBorder td {
+  border: 0;
+}
+
+tr.no-bottom-border td {
+  border-bottom: none
+}
+
+tr.no-bottom-border td {
+  border-bottom: none
+}
+
+tr.nooverall td {
+  border-left: 0px solid;
+  border-right: 0px solid;
+  border-bottom: none
+} 
+
+.column1 {
+  float: left;
+  width: 19%;
+}
+
+table td#CELL1{background-color:rgb(164, 230, 164);}
+table td#CELL2{background-color:rgb(164, 230, 164);}
+table td#CELL3{background-color:rgb(164, 230, 164);}
+table td#CELL4{background-color:rgb(164, 230, 164);}
+table td#CELL5{background: linear-gradient(to right,rgb(164, 230, 164) 50%, white 50%);}
+table td#CELL6{background-color:rgb(164, 230, 164);}
+table td#CELL7{background-color:rgb(164, 230, 164);}
+table td#CELL8{background-color:rgb(164, 230, 164);}
+table td#CELL9{background-color:rgb(164, 230, 164);}
+table td#CELL10{background-color:rgb(164, 230, 164);}
+table td#CELL11{background-color:rgb(164, 230, 164);}
+table td#CELL12{background-color:rgb(164, 230, 164);}
+table td#CELL13{background-color:rgb(164, 230, 164);}
+table td#CELL14{background-color:rgb(164, 230, 164);}
+
+.borderexample {
+border-style:solid;
+border-color:#6fade3;
+}
+
+/* Clear floats after the columns */
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+.column {
+  float: left;
+  width: 27%;
+}
+  
+/* Clear floats after the columns */
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+# /* Responsive layout - when the screen is less than 600px wide, make the three columns stack on top of each other instead of next to each other */
+@media screen and (max-width: 600px) {
+  .column {
+    width: 100%;
+  }
+}
+
+.button {
+  background-color: #D3D3D3; /* Gray*/
+  border: none;
+  color: black;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 12px;
+}
+
+{
+  background-color: #39F;
+  color: #FF3;
+}
+
+#curly-brace {
+width: 60%;
+position:absolute;
+  left: 40%;
+  margin-left: -150px;
+  top: 108px;
+
+}
+
+.brace {
+  border-bottom: 5px solid;
+  margin: 0 10%;
+  width: 30%;
+  height: 20px;  
+  float: left;
+}
+
+.brace:before,
+.brace:after
+{
+  content: "";
+  width: 10%;
+  height: 50px;
+  position: absolute;
+  display: block;
+}
+
+#left:before
+{  
+  border-bottom: 5px solid;  
+  border-bottom-left-radius: 20px;
+  margin-left: -10%;
+  margin-top: -30px;
+}
+
+#left:after
+{
+  border-top: 5px solid;
+  border-top-right-radius: 20px;
+  margin-left: 30%;
+  margin-top: 20px;    
+}
+
+#right:before
+{
+  border-top: 5px solid;
+  border-top-left-radius: 20px;
+  margin-left: -10%;
+  margin-top: 20px;
+}
+
+#right:after
+{
+  border-bottom: 5px solid;
+  border-bottom-right-radius: 20px;
+  margin-left: 30%;
+  margin-top: -30px;
+}
+i {
+  border: solid black;
+  border-width: 0 3px 3px 0;
+  display: inline-block;
+  padding: 3px;
+}
+
+.right {
+  transform: rotate(-45deg);
+  -webkit-transform: rotate(-45deg);
+}
+
+span {
+  content: "\27F6";
+}
+
+.right-arrow {
+	display: inline-block;
+	position: relative;
+  background: blue;
+  width: 30%;
+	padding: 15px;
+}
+
+.right-arrow:after {
+	content: '';
+	display: block;  
+	position: absolute;
+	left: 100%;
+	top: 50%;
+	margin-top: -10px;
+	width: 0;
+	height: 0;
+	border-top: 10px solid transparent;
+	border-right: 10px solid transparent;
+	border-bottom: 10px solid transparent;
+	border-left: 10px solid blue;
+}
+
+.wrapper {
+  width: 500px;
+  border: 1px solid black;
+  overflow: hidden; /* add this to contain floated children */
+}
+.div1 {
+  width: 300px;
+  float:left; /* add this */
+  border: 1px solid red;
+}
+
+.div2 {
+  border: 1px solid green;
+  float: left; /* add this */
+}

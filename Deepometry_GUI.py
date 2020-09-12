@@ -34,10 +34,6 @@ import deepometry.utils
 import deepometry.model
 import deepometry.visualize
 
-# Settings
-# os.environ["JAVA_HOME"] = "C:/Program Files/Java/jdk-11.0.3"
-# sys.path.insert(0, 'C:/ProgramData/Anaconda3/envs/Deepometry/Lib/site-packages')
-
 
 # Custom functions
 

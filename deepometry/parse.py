@@ -39,6 +39,9 @@ def parse(paths, output_directory, meta, size, channels=None, montage_size=0):
     ext = os.path.splitext(paths[0])[-1].lower()
 
     if ext == ".cif":
+        # This line is critical for reading .CIF files
+        javabridge.start_vm(class_path=bioformats.JARS, max_heap_size="8G")     
+        
         for path in paths:
             print(path)
             _parse_cif(path, output_directory, size, meta, channels, montage_size)
@@ -69,9 +72,6 @@ def _group(paths, channels):
 
 
 def _parse_cif(path, output_directory, size, meta, channels, montage_size):
-
-    # This line is critical for reading .CIF files
-    javabridge.start_vm(class_path=bioformats.JARS, max_heap_size="8G")     
 
     if not os.path.exists(output_directory):
         os.makedirs(output_directory)
@@ -137,8 +137,11 @@ def _parse_cif(path, output_directory, size, meta, channels, montage_size):
 def _parse_tif(paths, output_directory, size, meta, channels, montage_size):
     groups = _group(sorted(paths), sorted(channels))
 
+    if not os.path.exists(output_directory):
+        os.makedirs(output_directory)
+
     if montage_size > 0:
-        print('Stitching')
+        print('Stitching', meta)
 
         n_chunks = __compute_chunks(len(groups), montage_size)
         chunk_size = montage_size**2        

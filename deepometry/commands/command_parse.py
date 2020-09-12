@@ -1,6 +1,6 @@
 import glob
 import os.path
-
+import javabridge
 import bioformats
 import click
 import pkg_resources
@@ -16,8 +16,8 @@ import deepometry.parse
     Subdirectories of INPUT are class labels and subdirectory contents are .CIF or .TIF files containing data 
     corresponding to that label.
 
-    The OUTPUT directory will be created if it does not already exist. Subdirectories of OUTPUT are class labels
-    corresponding to the subdirectories of INPUT. The contents of the subdirectories are NPY files containing parsed
+    The OUTPUT directory will be created if it does not already exist. Subdirectories of OUTPUT will mirror the
+    folders and sub-folders structure of INPUT. The contents of the subdirectories are NPY files containing parsed
     .CIF or .TIF image data.
     """
 )
@@ -30,12 +30,6 @@ import deepometry.parse
     type=click.Path()
 )
 @click.option(
-    "--channels",
-    default=None,
-    help="A comma-separated list of zero-indexed channels to parse. Use \"-\" to specify a range of channels. E.g.,"
-         " \"0,5,6,7\" or \"0,5-7\". All channels will be parsed if this flag is omitted."
-)
-@click.option(
     "--image-size",
     default=48,
     help="Width and height dimension of the parsed images. The minimum suggested size is 48 pixels. Image dimensions"
@@ -43,76 +37,77 @@ import deepometry.parse
          " specified size will be padded with random noise following the distribution of the image background."
 )
 @click.option(
+    "--channels",
+    default=None,
+    help="A comma-separated list of zero-indexed channels to parse. Use \"-\" to specify a range of channels. E.g.,"
+         " \"0,5,6,7\" or \"0,5-7\". All channels will be parsed if this flag is omitted."
+)
+@click.option(
+    "--montage-size",
+    default=0,
+    help="Use this option to generate per-channel tiled (stitched) montage, which is an NxN grid of single-cell images."
+         " Leave default \"0\" for no stitching."
+)
+@click.option(
     "--verbose",
     is_flag=True
 )
-def command(input, output, channels, image_size, verbose):
-    input_directory = os.path.realpath(input)
 
-    output_directory = os.path.realpath(output)
 
-    if not os.path.exists(output_directory):
-        os.mkdir(output_directory)
+def command(input, output, image_size, channels, montage_size, verbose):
 
-    # Collect subdirectories.
-    subdirectories = [
-        directory for directory in glob.glob(os.path.join(input_directory, "*")) if os.path.isdir(directory)
-    ]
+    input_dir = os.path.realpath(input)
 
+    output_dir = os.path.realpath(output)
+    
     # Collect channels to parse.
     if channels:
         channels = _parse_channels(channels)
 
-    jvm_started = False
+    all_subdirs = [x[0] for x in os.walk(input_dir)]
 
-    for subdirectory in subdirectories:
-        # Collect images in subdirectory, filtering out unsupported image formats.
-        paths = _collect(subdirectory)
-        ext = os.path.splitext(paths[0])[-1].lower()
+    possible_labels = sorted(list(set([os.path.basename(i) for i in all_subdirs])))
 
-        if ext == ".cif" and not jvm_started:
-            import javabridge
+    # Book-keepers for all metadata
+    experiments = [i for i in possible_labels if 'experiment' in i.lower()]
+    days = [i for i in possible_labels if 'day' in i.lower()]
+    samples = [i for i in possible_labels if 'sample' in i.lower()]
+    replicates = [i for i in possible_labels if 'replicate' in i.lower()]
+    classes = [i for i in possible_labels if 'class' in i.lower()]
+    
+    print('Parsing... Please wait!')
 
-            log_config = pkg_resources.resource_filename("deepometry", "resources/logback.xml")
+    #TODO: this could be improved
+    for exp in experiments:
+        for day in days:
+            for sample in samples:
+                for rep in replicates:
+                    for cl in classes:
+                        folder_path = os.path.join(input_dir,exp,day,sample,rep,cl)
+                        
+                        if os.path.exists(folder_path):
+                            pathnames_tif = glob.glob(os.path.join(folder_path, '*.tif'))
+                            pathnames_tiff = glob.glob(os.path.join(folder_path, '*.tiff'))
+                            pathnames_cif = glob.glob(os.path.join(folder_path, '*.cif'))
+                            
+                            for paths in [pathnames_tif, pathnames_tiff, pathnames_cif]:
+                                if len(paths) > 0:
+                                    dest_dir = os.path.join(output_dir,exp,day,sample,rep,cl)
 
-            javabridge.start_vm(
-                args=[
-                    "-Dlogback.configurationFile={}".format(log_config),
-                    "-Dloglevel={}".format("DEBUG" if verbose else "OFF")
-                ],
-                class_path=bioformats.JARS,
-                max_heap_size="8G",
-                run_headless=True
-            )
+                                    deepometry.parse.parse(
+                                        paths=paths, 
+                                        output_directory=dest_dir, 
+                                        meta=exp + '_' + day + '_' + sample + '_' + rep + '_' + cl,                                        
+                                        size=int(image_size),
+                                        channels=channels,
+                                        montage_size=int(montage_size)
+                                    )
 
-            jvm_started = True
+    print('Done')
 
-        label = os.path.split(subdirectory)[-1]
-        label_directory = os.path.join(output_directory, label)
+    javabridge.kill_vm()
 
-        try:
-            deepometry.parse.parse(
-                paths,
-                output_directory=label_directory,
-                size=image_size,
-                channels=channels
-            )
-        except Exception as exception:
-            if jvm_started:
-                javabridge.kill_vm()
-
-            raise exception
-
-    if jvm_started:
-        javabridge.kill_vm()
-
-
-def _collect(directory):
-    def is_image_file(path):
-        ext = os.path.splitext(path)[-1].lower()
-        return ext in deepometry.parse.SUPPORTED_FORMATS
-
-    return [path for path in glob.glob(os.path.join(directory, "*")) if is_image_file(path)]
+    return True
 
 
 def _parse_channels(channel_str):

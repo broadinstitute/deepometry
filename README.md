@@ -27,12 +27,12 @@ If you want to install ``deepometry`` in development mode, run:
     pip install --editable .[development]
 
 
-<h2>Use</h2>
----
+**<h2>Use</h2>**
+
 Execute ``Deepometry`` functions through any of the following interfaces:
 
-<h3>CLI</h3>
-============
+CLI
+------
 
 Switch to [CLI](https://github.com/broadinstitute/deepometry/tree/CLI) branch:
 
@@ -47,13 +47,15 @@ To display subcommand use and options:
     deepometry SUBCOMMAND --help
 
 
-<h3>IPYNB</h3>
-============
+IPYNB
+------
 
 - Use these [Jupyter notebooks](https://github.com/broadinstitute/deepometry/tree/master/examples)
 
-<h3>GUI (recommended)</h3>
-============
+
+GUI (recommended)
+------
+
 Switch to [GUI](https://github.com/broadinstitute/deepometry/tree/GUI) branch:
     
     git checkout GUI

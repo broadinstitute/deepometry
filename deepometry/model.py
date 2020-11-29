@@ -39,7 +39,7 @@ class Model(object):
         self.model = keras_resnet.models.ResNet50(x, classes=units)
         
 
-    def compile(self, lr=0.00001):
+    def compile(self, lr=0.0001):
         """
         Configure the model.
         """
@@ -117,6 +117,10 @@ class Model(object):
         )
 
         if standardize:
+            if len(features.shape) > 2:
+                a = numpy.mean(features, axis = 1)
+                del(features)
+                features = numpy.mean(a, axis = 1)              
             return sklearn.preprocessing.scale(features)
 
         return features

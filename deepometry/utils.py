@@ -14,7 +14,7 @@ def collect_pathnames(input_dir, labels_of_interest, n_samples=None):
     
     filelist = []
     for label in labels_of_interest:
-        filelist.append([i for i in all_npy for j in split_all(i)[-6:-1] if label in j]) 
+        filelist.append([i for i in all_npy for j in split_all(i)[-6:-1] if label in j.lower()]) 
     
     # Collect similar number of samples per class
     pathnames = []
@@ -48,7 +48,7 @@ def _load(pathnames, labels_of_interest=None):
             x[index] = numpy.load(pathname)
             
             if labels_of_interest != None:
-                label = [l for l in labels_of_interest for spl in split_all(pathname)[-6:-1] if l in spl][0]
+                label = [l for l in labels_of_interest for spl in split_all(pathname)[-6:-1] if l in spl.lower()][0]
                 y[index] = label_to_index[label]
 
             metadata_bkpr.append(split_all(pathname)[-6:-1])

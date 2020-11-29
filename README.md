@@ -49,7 +49,7 @@ To display subcommand use and options:
 IPYNB
 ------
 
-- Use these [Jupyter notebooks](https://github.com/broadinstitute/deepometry/tree/GUI/examples)
+- Use these [Jupyter notebooks](https://github.com/broadinstitute/deepometry/tree/IPYNB)
 
 GUI (recommended)
 ------
@@ -65,19 +65,19 @@ Open a web-browser, navigate to **http://localhost:5000/** or **http://127.0.0.1
 
 (this is a local server running on your own device, no data is sent out to the internet)
 
-![Full view GUI](assets/full_GUI.png)
+![Full view GUI](static/full_GUI.png)
 
-**<h3>1. Parsing data:</h3>**
+**<h3>1. Preprocessing</h3>**
 
 Transform single-cell image data from .TIF, .CIF (gated populations exported from [IDEAS software](https://www.luminexcorp.com/imaging-flow-cytometry/)) to Numpy arrays (.NPY).
 
 Essential user inputs:
 - *Frame size*: set the width/height size of the (width × height × channel) tensor. If user sets a size bigger than the original images, each of the images will be padded with its own background. If user sets a size smaller than the original images, each of the images will be cropped toward its center.
 - *Channels*: choose the channel(s) imaged by the instrument (e.g. image flow cytometer, fluorescent microscopy). Use square brackets [ ] for multiple channels, e.g. [0,6,3,4]. If a single channel is desired, input an integer **without** bracket.
-- *Input location*: choose the folder that contains original image inputs. **Note**: it is highly recommended to structure the input folder into hierarchical sub-folders tagged with *Experiment ...*, *Day ...*, *Sample ...*, *Replicate ...* , *Class ...*
+- *Input location*: choose the folder that contains original image inputs. **Note**: it is recommended to structure the input folder into hierarchical sub-folders tagged with *Experiment ...*, *Day ...*, *Sample ...*, *Replicate ...* , *Class ...*
 
 <p class="aligncenter">
-<img class="center" src="https://github.com/broadinstitute/deepometry/raw/GUI/static/input_folder_tree.png" width="400" />
+<img class="center" src="https://github.com/broadinstitute/deepometry/raw/GUI/static/input_folder_tree.png" width="250" />
 </p>
 <style>
 .aligncenter {
@@ -100,29 +100,17 @@ Essential user inputs:
 - *Learning iteration*: the number of *epochs* for a deep learning training session. By default it is set to 512, which might take several days (depends on the size of the training materials and available hardware, especially GPUs).
 - More (hyper)parameters for model training can be set at [model.fit](https://github.com/broadinstitute/deepometry/blob/6f41345f4ddff1cdb2acdfba427274ee03e865f1/deepometry/model.py#L106).
 
-**<h3>3. Evaluation</h3>**
+**<h3>3a. Supervised classification</h3>**
 
-Evaluate a trained model using annotated data.
+Evaluate a trained model using annotated data, or predict labels on unknown/unannotated data.
 
 Essential user inputs:
 - *Input location*: choose the folder that contains parsed numpy arrays (from step 1).
 - *Output location*: location to store the evaluation outcomes.
-- *Target classification*: choose the target categories to test the classifier.
-- *Input location* **for the model training session**: choose the folder that contains parsed numpy arrays used for training the model (green column). This is crucial to ensure the correct reconstruction of categorization, since the training materials should contain all the categories the model has been exposed to. E.g. there could be a situation that one or some categories are missing in a testing dataset.
+- *Target classification*: choose the target categories to test the classifier. It is crucial to retrieve the list of possible classficiation targets from **the model training session** to ensure the correct reconstruction of categorization, since the training materials should contain all the categories the model has been exposed to. E.g. there could be a situation that one or some categories are missing in a testing dataset.
 - *Model location* (optional): location of the saved model. Input either a folder location or an exact .h5 or .hdf5 file. If the provided folder location contains more than one model, the latest .h5 or .hdf5 will be loaded. If no folder location is provided, the checkpoint.hdf5 (in deepometry/data/) will be used.
 
-**<h3>4. Prediction</h3>**
-
-Use a trained model to predict the categories of unknown objects.
-
-Essential user inputs:
-- *Input location*: choose the folder that contains parsed numpy arrays (from step 1).
-- *Output location*: location to store the prediction outcomes.
-- *Target classification*: choose the target categories to predict.
-- *Input location* **of the model training session**: choose the folder that contains parsed numpy arrays (from step 1). This is crucial to ensure the correct reconstruction of categorization, since the training materials should contain all the categories the model has been taught to classify, e.g. there could be a situation that one or some categories are missing in a testing dataset.
-- *Model location* (optional): location of the saved model. Input either a folder location or an exact .h5 or .hdf5 file. If the provided folder location contains more than one model, the latest .h5 or .hdf5 will be loaded. If no folder location is provided, the checkpoint.hdf5 (in deepometry/data/) will be used.
-
-**<h3>5. Feature extraction</h3>**
+**<h3>3b. Feature extraction</h3>**
 
 Use a trained model to extract deep learning feature embeddings of unclassified objects (eg. as in weakly supervised learning).
 
@@ -134,4 +122,4 @@ Essential user inputs:
 
 Once feature extraction is done, the output files, i.e. features_extracted_by_pool5.txt, metadata.tsv can be uploaded to http://projector.tensorflow.org for 2D/3D PCA, t-SNE, and UMAP visualization of deep learning embeddings. Example:
 
-[![Youtube 3D t-SNE](assets/embed.png)](https://www.youtube.com/watch?v=HZZUDobELJM "Visualization of deep learning embeddings")
+[![Youtube 3D t-SNE](static/embed.png)](https://www.youtube.com/watch?v=HZZUDobELJM "Visualization of deep learning embeddings")

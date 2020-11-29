@@ -46,19 +46,8 @@ tr.nooverall td {
 }
 
 table td#CELL1{background-color:rgb(164, 230, 164);}
-table td#CELL2{background-color:rgb(164, 230, 164);}
-table td#CELL3{background-color:rgb(164, 230, 164);}
-table td#CELL4{background-color:rgb(164, 230, 164);}
-table td#CELL5{background: linear-gradient(to right,rgb(164, 230, 164) 50%, white 50%);}
-table td#CELL6{background-color:rgb(164, 230, 164);}
-table td#CELL7{background-color:rgb(164, 230, 164);}
-table td#CELL8{background-color:rgb(164, 230, 164);}
-table td#CELL9{background-color:rgb(164, 230, 164);}
-table td#CELL10{background-color:rgb(164, 230, 164);}
-table td#CELL11{background-color:rgb(164, 230, 164);}
-table td#CELL12{background-color:rgb(164, 230, 164);}
-table td#CELL13{background-color:rgb(164, 230, 164);}
-table td#CELL14{background-color:rgb(164, 230, 164);}
+table td#CELL2{background: linear-gradient(to right,rgb(164, 230, 164) 50%, white 50%);}
+
 
 .borderexample {
 border-style:solid;
@@ -219,3 +208,18 @@ span {
   border: 1px solid green;
   float: left; /* add this */
 }
+
+p > label {
+  display: block;
+}
+
+input:invalid {
+  box-shadow: 0 0 5px 1px red;
+}
+
+input:focus:invalid {
+  box-shadow: none;
+}
+
+
+

@@ -40,7 +40,7 @@ def parse(paths, output_directory, meta, size, channels=None, montage_size=0):
 
     if ext == ".cif":
         # This line is critical for reading .CIF files
-        javabridge.start_vm(class_path=bioformats.JARS, max_heap_size="8G")     
+        # javabridge.start_vm(class_path=bioformats.JARS, max_heap_size="8G")     
         
         for path in paths:
             print(path)

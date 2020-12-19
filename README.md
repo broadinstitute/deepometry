@@ -1,11 +1,11 @@
-<h1>Deepometry</h1>
+**<h1>Deepometry</h1>**
 
-Deep learning-based image classification and featurization for imaging (flow) cytometry.
+Deep learning-based image classification and featurization for imaging cytometry.
 
 This workflow was originally built for imaging flow cytometry data but can be readily adapted for microscopic images of isolated single objects. The modified implementation of ResNet50 allows researchers to use any image frame size and any number of color channels.
 
-<h2>Installation</h2>
-
+**<h2>Installation</h2>**
+------
 A full installation guide can be found [**here**](https://www.evernote.com/shard/s730/sh/f60a69be-cb67-45f7-8054-c71035478b5e/5d7ca2a094dd33a599ef57715403cead). Briefly, the following dependencies are needed:
 - Python 3.6
 - Tensorflow-gpu 1.9.0
@@ -25,7 +25,7 @@ Once the above dependencies are installed, clone this ``Deepometry`` repository 
 
 
 
-**Use**
+**<h2>Use</h2>**
 ------
 Execute ``Deepometry`` functions through any of the following interfaces:
 
@@ -119,7 +119,7 @@ Once feature extraction is done, the output files, i.e. features_extracted_by_po
 
 
 **<h2>Publications</h2>**
-
+------
 Doan M, Sebastian JA, Caicedo JC, et al. [Objective assessment of stored blood quality by deep learning](https://www.pnas.org/content/117/35/21381). Proc Natl Acad Sci U S A. 2020;117(35):21381-21390. doi:10.1073/pnas.2001227117
 
 Doan M, Case M, Masic D, et al. [Label-Free Leukemia Monitoring by Computer Vision](https://pubmed.ncbi.nlm.nih.gov/32091180/). Cytometry A. 2020;97(4):407-414. doi:10.1002/cyto.a.23987

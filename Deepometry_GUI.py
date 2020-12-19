@@ -162,7 +162,7 @@ def evaluating(input_predict, output_predict, modellocation, class_option, unann
     '''
     Evaluate a trained deep neural network on annotated ground truth
     '''
-    print('Evaluating... Please wait.')
+    print('Predicting... Please wait.')
 
     if not os.path.exists(output_predict):
         os.makedirs(output_predict) 
@@ -185,7 +185,7 @@ def evaluating(input_predict, output_predict, modellocation, class_option, unann
 
     model.compile()
 
-    predicted = model.predict(x, modellocation, batch_size=32)
+    predicted = model.predict(x, modellocation, batch_size=32, verbose=1)
     
     predicted = numpy.argmax(predicted, -1)
     

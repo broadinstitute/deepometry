@@ -120,8 +120,8 @@
                   <td align="left"><abbr title="(Optional) Use this option to generate per-channel tiled (stitched) montages"><input type="text" class="form-control" id="montage_size" name="montage_size" placeholder="default=no stitching or int 30" pattern="[0-9]*" /></abbr></td>
                 </tr>
                 <tr>
-                  <td align="right"><abbr title="(Optional) Input a ratio to split the parsed data into Training and Hold-out Cross-Validation subsets. Data will be randomly shuffled before splitting. Training set can be used in 'Step 2. Model Training', and Hold-out set can be used in 'Step 3a. Prediction' to evaluate the model performance."><label for="montage_size">Train/Hold-out split:</label></abbr></td>
-                  <td align="left"><abbr title="(Optional) Input a ratio to split the parsed data into Training and Hold-out Cross-Validation subsets."><input type="text" class="form-control" id="train_test_split" name="train_test_split" placeholder="default=no split or ratio 70:30" pattern="[0-9:]*" /></abbr></td>
+                  <td align="right"><abbr title="(Optional) Input a ratio, e.g. '80:20' or '80/20' or '80,20', to split the parsed data into Training and Hold-out Cross-Validation subsets. Data will be randomly shuffled before splitting. Training set can be used in 'Step 2. Model Training', and Hold-out set can be used in 'Step 3a. Prediction' to evaluate the model performance."><label for="train_test_split">Train/Hold-out split:</label></abbr></td>
+                  <td align="left"><abbr title="(Optional) Input a ratio, e.g. '80:20' or '80/20' or '80,20', to split the parsed data into Training and Hold-out Cross-Validation subsets."><input type="text" class="form-control" id="train_test_split" name="train_test_split" placeholder="default=no split or ratio 70:30" pattern="[0-9]*[,_:/-][0-9]*" /></abbr></td>
                 </tr>
                 <tr>
                   <td>&nbsp;</td>

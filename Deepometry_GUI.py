@@ -369,10 +369,11 @@ class extract_essential(Form):
         if parse_essential(request.form).validate():                
         
             input_parse = request.form['input_parse']
-            output_parse = request.form['output_parse']
-            frame=request.form['frame']            
-            channels=request.form['channels']
-            montage_size=request.form['montage_size']
+            output_parse = request.form['output_parse']                
+            frame = request.form['frame']            
+            channels = request.form['channels']
+            montage_size = request.form['montage_size']
+            train_test_split = request.form['train_test_split']
 
             if frame=='':
                 frame = 48
@@ -384,9 +385,33 @@ class extract_essential(Form):
                 # print('No stitching')
                 montage_size = 0
 
-            parsing(input_parse, output_parse, frame, channels, montage_size)
+            if train_test_split !='':
+                output_parse_train = os.path.join(output_parse, 'Train')
+                output_parse_test = os.path.join(output_parse, 'Hold_out')
 
+                parsing(input_parse, output_parse_train, frame, channels, montage_size)
 
+                # Transform string train_test_split into a ratio eg. 0.2, 0.3
+                split_portion = [float(i) for i in re.split("[,_:/-]", train_test_split)]
+                train_test_split = split_portion[1]/sum(split_portion)
+
+                filelist = glob.glob(os.path.join(output_parse_train,'**','*.npy'), recursive=True)
+                split_index = int(len(filelist) * (1.0 - train_test_split))
+                indexes = numpy.random.permutation(len(filelist))
+
+                test_set = [filelist[index] for index in indexes[split_index:]]  
+
+                # Move some of the files from parsed location to 'hold_out' folder; the rest is for 'train'
+                for i in test_set:
+                    dest = os.path.dirname(i).replace(output_parse_train, output_parse_test)
+                    if not os.path.exists(dest):
+                        os.makedirs(dest)
+
+                    os.rename(i, os.path.join(dest, os.path.basename(i)) )
+                    
+            else:
+                parsing(input_parse, output_parse, frame, channels, montage_size)
+ 
         # Model training   
         elif train_essential(request.form).validate():
 

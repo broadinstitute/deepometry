@@ -29,7 +29,7 @@ setuptools.setup(
         "javabridge==1.0.19",
         "Keras==2.1.5",  # TODO: See deepometry.iterator.NumpyArrayIterator's `_get_batches_of_transformed_samples`.
         "keras-resnet==0.0.7",
-        "numpy==1.18.1",
+        "numpy==1.22.0",
         "opencv-python==4.2.0.34",
         "pandas==1.0.3",
         "python-bioformats==1.5.2",

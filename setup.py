@@ -33,7 +33,7 @@ setuptools.setup(
         "opencv-python==4.2.0.34",
         "pandas==1.0.3",
         "python-bioformats==1.5.2",
-        "scipy==1.4.1",
+        "scipy==1.10.0",
         "scikit-image==0.16.2",
         "scikit-learn==0.22.1",
         "seaborn==0.10.1",

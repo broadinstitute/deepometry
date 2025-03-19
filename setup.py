@@ -25,7 +25,7 @@ setuptools.setup(
     },
     install_requires=[
         "click",
-        "flask==1.1.2",
+        "flask==2.3.2",
         "javabridge==1.0.19",
         "Keras==2.1.5",  # TODO: See deepometry.iterator.NumpyArrayIterator's `_get_batches_of_transformed_samples`.
         "keras-resnet==0.0.7",
